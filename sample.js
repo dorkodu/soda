@@ -6,11 +6,10 @@ const Counter = Lucid.createComponent("Counter", {
     methods: {
         increment: (state, setState) => {
             setState({ count: state.count + 1 });
-            console.log(state);
         }
     },
     render() {
-        return `<h1 onclick="increment">Count: ${this.state.count}</h1>`;
+        return '<h1 onclick="{{methods.increment}}">Count: {{state.count}}</h1>';
     }
 });
 /* --- COMPONENTS --- */

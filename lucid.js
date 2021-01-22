@@ -43,16 +43,24 @@ function createApp(properties) {
   return Lucid.app;
 }
 
+/**
+ * 
+ * @param {HTMLElement} parentNode 
+ */
 function searchComponents(parentNode) {
-  parentNode.childNodes.forEach((child)=>{
+  parentNode.childNodes.forEach((child) => {
+    // "lucid-component" and "lucid-key" only work with elements
+    if (child.nodeType !== Node.ELEMENT_NODE)
+      return;
+
     const componentName = child.getAttribute("lucid-component");
     const componentKey = child.getAttribute("lucid-key");
 
-    if (!componentName || !componentKey){
+    if (!componentName || !componentKey) {
       searchComponents(child);
       return;
     }
-    
+
     Lucid.app.currPage.elements[componentName + componentKey] = {
       state: Lucid.app.components[componentName].state,
       methods: Lucid.app.components[componentName].methods,

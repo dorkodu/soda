@@ -36,32 +36,23 @@ function createApp(properties) {
       this.container = document.getElementById(containerId);
       this.container.innerHTML = this.currPage.contents();
 
-      searchComponents(this.container);
+      this.container.childNodes.forEach((child) => {
+        const componentName = child.getAttribute("lucid-component");
+        const componentKey = child.getAttribute("lucid-key");
+
+        this.currPage.elements[componentName + componentKey] = {
+          state: this.components[componentName].state,
+          methods: this.components[componentName].methods,
+          dom: child
+        };
+
+        child.innerHTML = this.components[componentName].render();
+        registerDom(child, componentName, componentKey);
+      });
     }
   };
 
   return Lucid.app;
-}
-
-function searchComponents(parentNode) {
-  parentNode.childNodes.forEach((child)=>{
-    const componentName = child.getAttribute("lucid-component");
-    const componentKey = child.getAttribute("lucid-key");
-
-    if (!componentName || !componentKey){
-      searchComponents(child);
-      return;
-    }
-    
-    Lucid.app.currPage.elements[componentName + componentKey] = {
-      state: Lucid.app.components[componentName].state,
-      methods: Lucid.app.components[componentName].methods,
-      dom: child
-    };
-
-    child.innerHTML = Lucid.app.components[componentName].render();
-    registerDom(child, componentName, componentKey);
-  });
 }
 
 /**

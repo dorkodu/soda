@@ -20,7 +20,7 @@ const HomePage = Lucid.createPage({
   name: "home",
   payload: {},
   contents() {
-    return `<div lucid-component="Counter" lucid-key="0"></div>`;
+    return `<div><div lucid-component="Counter" lucid-key="0"></div></div>`;
   }
 });
 /* --- PAGES --- */

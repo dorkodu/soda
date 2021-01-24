@@ -2,6 +2,7 @@ export const Lucid = {
   createComponent: createComponent,
   createPage: createPage,
   createApp: createApp,
+  /** @type {App} */
   app: {}
 };
 
@@ -9,7 +10,7 @@ export const Lucid = {
  * @typedef {object} App
  * 
  * @property {Page} page
- * @property {{string: Component}} components
+ * @property {Object.<string, Component>} components
  * @property {(containerId: string) => void} run
  */
 
@@ -128,7 +129,14 @@ function searchComponents(node) {
       return;
     }
 
-    // Save components state, methods and DOM into lucid for later use
+    if (!Lucid.app.components[componentName].skeleton) {
+      const elem = document.createElement("div");
+      elem.innerHTML = Lucid.app.components[componentName].render();
+      Lucid.app.components[componentName].skeleton = createSkeleton(elem.firstChild)
+      console.log(Lucid.app.components[componentName].skeleton)
+    }
+
+    // Save component's state, methods and DOM into lucid for later use
     Lucid.app.page.elements[componentName + componentKey] = {
       state: Lucid.app.components[componentName].state,
       methods: Lucid.app.components[componentName].methods,
@@ -147,6 +155,10 @@ function searchComponents(node) {
  */
 function registerDom(element, componentName, componentKey) {
   element.childNodes.forEach((child) => {
+    // Only HTMLElement node's have attributes so if it's anything else, return
+    if (child.nodeType !== Node.ELEMENT_NODE)
+      return;
+
     for (let i = 0; i < child.attributes.length; ++i) {
       const attr = child.attributes[i];
 
@@ -191,7 +203,39 @@ function registerDom(element, componentName, componentKey) {
     // Convert textContent variables and re-write to the element
     const result = convertTextVariables(Lucid.app.page.elements[componentName + componentKey], child.textContent);
     child.textContent = result;
+
+    // Register all children recursively
+    registerDom(child, componentName, componentKey);
   });
+}
+
+/**
+ * 
+ * @param {HTMLElement} child 
+ */
+function createSkeleton(child) {
+  const skeleton = {
+    tag: child.tagName,
+    attrs: {},
+    children: []
+  };
+
+  if (child.nodeType !== Node.ELEMENT_NODE) {
+    const nodeValue = child.nodeValue.trim();
+    if (nodeValue !== "")
+      skeleton.children = nodeValue;
+
+    return skeleton;
+  }
+
+  for (let i = 0; i < child.attributes.length; ++i)
+    if (child.attributes[i].specified)
+      skeleton.attrs[child.attributes[i].name] = child.attributes[i].value;
+
+  for (let i = 0; i < child.childNodes.length; ++i)
+    skeleton.children.push(createSkeleton(child.childNodes[i]));
+
+  return skeleton;
 }
 
 /**

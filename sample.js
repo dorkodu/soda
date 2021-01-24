@@ -9,7 +9,7 @@ const Counter = Lucid.createComponent("Counter", {
     }
   },
   render() {
-    return '<h1 onclick="{{methods.increment}}">Count: {{state.count}}</h1>';
+    return '<div><h1 onclick="{{methods.increment}}">Count: {{state.count}}</h1></div> ';
   }
 });
 /* --- COMPONENTS --- */
@@ -18,7 +18,6 @@ const Counter = Lucid.createComponent("Counter", {
 const HomePage = Lucid.createPage({
   path: "/",
   name: "home",
-  payload: {},
   contents() {
     return `
       <div>
@@ -35,7 +34,7 @@ const HomePage = Lucid.createPage({
 /* --- PAGES --- */
 
 const app = Lucid.createApp({
-  currPage: HomePage,
+  page: HomePage,
   components: { Counter }
 });
 app.run("app");

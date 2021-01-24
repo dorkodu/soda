@@ -133,6 +133,7 @@ function searchComponents(node) {
       const elem = document.createElement("div");
       elem.innerHTML = Lucid.app.components[componentName].render();
       Lucid.app.components[componentName].skeleton = createSkeleton(elem.firstChild)
+      console.log(Lucid.app.components[componentName].skeleton)
     }
 
     // Save component's state, methods and DOM into lucid for later use
@@ -213,19 +214,19 @@ function registerDom(element, componentName, componentKey) {
  * @param {HTMLElement} child 
  */
 function createSkeleton(child) {
-  if (child.nodeType !== Node.ELEMENT_NODE) {
-    const nodeValue = child.nodeValue.trim();
-    if (nodeValue === "")
-      return;
-
-    return nodeValue;
-  }
-
   const skeleton = {
     tag: child.tagName,
     attrs: {},
     children: []
   };
+
+  if (child.nodeType !== Node.ELEMENT_NODE) {
+    const nodeValue = child.nodeValue.trim();
+    if (nodeValue !== "")
+      skeleton.children = nodeValue;
+
+    return skeleton;
+  }
 
   for (let i = 0; i < child.attributes.length; ++i)
     if (child.attributes[i].specified)

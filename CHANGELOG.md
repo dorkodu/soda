@@ -1,3 +1,7 @@
+### 0.2.1 (January 24, 2021) 
+---
+- Fix rendering bugs (@bahkr in #1 and #2)
+
 ### 0.2.0 (January 20, 2021) 
 ---
 - Add ability to re-render when setState is used to change the state

@@ -9,7 +9,11 @@ const Counter = Lucid.createComponent("Counter", {
     }
   },
   render() {
-    return '<div><h1 onclick="{{methods.increment}}">Count: {{state.count}}</h1></div> ';
+    return `
+    <div>
+      <h1 onclick="{{methods.increment}}">Count: {{state.count}}</h1>
+    </div>
+    `;
   }
 });
 /* --- COMPONENTS --- */

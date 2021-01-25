@@ -38,6 +38,14 @@ export const Lucid = {
  */
 
 /**
+ * @typedef {object} Skeleton
+ * 
+ * @property {string} tag
+ * @property {Object.<string, string>} attrs
+ * @property {Skeleton[]} children
+ */
+
+/**
  * Returns the component that's created from given name and properties.
  * @param {string} name HTML tag name 
  * @param {object} properties
@@ -132,120 +140,123 @@ function searchComponents(node) {
     if (!Lucid.app.components[componentName].skeleton) {
       const elem = document.createElement("div");
       elem.innerHTML = Lucid.app.components[componentName].render();
-      Lucid.app.components[componentName].skeleton = createSkeleton(elem.firstChild)
+
+      // Create the skeleton out of the first element node
+      for (let i = 0; i < elem.childNodes.length; ++i)
+        if (elem.childNodes[i].nodeType === Node.ELEMENT_NODE) {
+          Lucid.app.components[componentName].skeleton = createSkeleton(elem.childNodes[i]);
+          break;
+        }
+
       console.log(Lucid.app.components[componentName].skeleton)
     }
 
+    const elementKey = componentName + componentKey;
+
     // Save component's state, methods and DOM into lucid for later use
-    Lucid.app.page.elements[componentName + componentKey] = {
+    Lucid.app.page.elements[elementKey] = {
       state: Lucid.app.components[componentName].state,
       methods: Lucid.app.components[componentName].methods,
       dom: child
     };
 
-    // Render the component then register it's attributes and replace it's text variables
-    child.innerHTML = Lucid.app.components[componentName].render();
-    registerDom(child, componentName, componentKey);
-  });
-}
-
-/**
- * Registers a lucid component's attributes and replaces it's text variables
- * @param {HTMLElement} element 
- */
-function registerDom(element, componentName, componentKey) {
-  element.childNodes.forEach((child) => {
-    // Only HTMLElement node's have attributes so if it's anything else, return
-    if (child.nodeType !== Node.ELEMENT_NODE)
-      return;
-
-    for (let i = 0; i < child.attributes.length; ++i) {
-      const attr = child.attributes[i];
-
-      // Some old browsers loop all the attributes, even the empty ones, so check if attr is specified
-      if (!attr.specified)
-        return;
-
-      // Get the value of the attribute then if it's a string variable, convert it.
-      const attrValue = attr.value;
-      const result = convertTextVariables(Lucid.app.page.elements[componentName + componentKey], attrValue);
-
-      // If attribute starts with on, it's a event attribute so add it's event listener
-      if (attr.name.startsWith("on")) {
-        child.addEventListener(attr.name.substr(2),
-          () => {
-            result
-              (
-                Lucid.app.page.elements[componentName + componentKey].state,
-                (newState) => {
-                  // Save the new state
-                  Lucid.app.page.elements[componentName + componentKey].state = newState;
-
-                  // Re-render the element
-                  const dom = Lucid.app.page.elements[componentName + componentKey].dom;
-                  dom.innerHTML = Lucid.app.components[componentName].render();
-                  registerDom(dom, componentName, componentKey);
-                }
-              )
-          }
-        );
-
-        // Remove the inline attribute and decrease the attribute count by 1
-        child.removeAttribute(attr.name);
-        --i;
-      }
-      else {
-        // It's a non-event attribute so just replace with the result
-        attr.value = result;
-      }
-    }
-
-    // Convert textContent variables and re-write to the element
-    const result = convertTextVariables(Lucid.app.page.elements[componentName + componentKey], child.textContent);
-    child.textContent = result;
-
-    // Register all children recursively
-    registerDom(child, componentName, componentKey);
+    mount(Lucid.app.page.elements[elementKey].dom,
+      Lucid.app.components[componentName].skeleton,
+      elementKey);
   });
 }
 
 /**
  * 
+ * @param {HTMLElement} dom 
+ * @param {Skeleton} skeleton 
+ * @param {number} elementKey 
+ */
+function mount(dom, skeleton, elementKey) {
+  // If skeleton is a string, it's a text node that is the only child
+  if (typeof skeleton === "string") {
+    const textNode = document.createTextNode(convertTextVariables(elementKey, skeleton));
+    dom.appendChild(textNode);
+    return;
+  }
+
+  const elem = document.createElement(skeleton.tag);
+
+  for (const key in skeleton.attrs) {
+    const result = convertTextVariables(elementKey, skeleton.attrs[key])
+    if (key.startsWith("on")) {
+      elem.addEventListener(key.substr(2),
+        () => {
+          result
+            (
+              Lucid.app.page.elements[elementKey].state,
+              (newState) => {
+                // Save the new state
+                Lucid.app.page.elements[elementKey].state = newState;
+                console.log(newState);
+
+                // Re-render the element
+                //const dom = Lucid.app.page.elements[componentName + componentKey].dom;
+                //dom.innerHTML = Lucid.app.components[componentName].render();
+                //registerDom(dom, componentName, componentKey);
+              }
+            )
+        })
+    }
+    else {
+      elem.setAttribute(key, result);
+    }
+  }
+
+  for (let i = 0; i < skeleton.children.length; ++i)
+    mount(elem, skeleton.children[i], elementKey);
+
+  dom.appendChild(elem);
+}
+
+/**
+ * 
  * @param {HTMLElement} child 
+ * 
+ * @returns {Skeleton} Skeleton
  */
 function createSkeleton(child) {
+  if (child.nodeType !== Node.ELEMENT_NODE) {
+    const nodeValue = child.nodeValue.trim();
+    if (nodeValue !== "")
+      return nodeValue;
+
+    return null;
+  }
+
   const skeleton = {
     tag: child.tagName,
     attrs: {},
     children: []
   };
 
-  if (child.nodeType !== Node.ELEMENT_NODE) {
-    const nodeValue = child.nodeValue.trim();
-    if (nodeValue !== "")
-      skeleton.children = nodeValue;
-
-    return skeleton;
-  }
-
   for (let i = 0; i < child.attributes.length; ++i)
     if (child.attributes[i].specified)
       skeleton.attrs[child.attributes[i].name] = child.attributes[i].value;
 
-  for (let i = 0; i < child.childNodes.length; ++i)
-    skeleton.children.push(createSkeleton(child.childNodes[i]));
+  for (let i = 0; i < child.childNodes.length; ++i) {
+    const childSkeleton = createSkeleton(child.childNodes[i]);
+
+    if (childSkeleton)
+      skeleton.children.push(childSkeleton);
+  }
 
   return skeleton;
 }
 
 /**
  * Replaces text variables(e.g. {{state.count}}) with their correct value that's saved in either state or methods.
- * @param {object} obj 
+ * @param {string} elementKey 
  * @param {string} text
  *
  * @returns {string | Function} Text with the variables replaced or function converted from string variable
  */
-function convertTextVariables(obj, text) {
+function convertTextVariables(elementKey, text) {
   let startIndex = 0;
   let endIndex = 0;
 
@@ -257,7 +268,7 @@ function convertTextVariables(obj, text) {
 
     let properties = variable.split(".");
 
-    let tempObj = obj;
+    let tempObj = Lucid.app.page.elements[elementKey];
     for (let i = 0; i < properties.length; ++i)
       tempObj = tempObj[properties[i]];
 

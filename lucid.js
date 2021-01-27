@@ -129,12 +129,13 @@ function createApp(properties) {
  * 
  * @param {HTMLElement} dom 
  * @param {Skeleton} skeleton 
- * @param {number} elementKey 
+ * @param {string} componentName 
+ * @param {number} componentKey 
  */
-function mountComponent(dom, skeleton, elementKey) {
+function mountComponent(dom, skeleton, componentName, componentKey) {
   // If skeleton is a string, it's a text node that is the only child
   if (typeof skeleton === "string") {
-    const textNode = document.createTextNode(convertTextVariables(elementKey, skeleton));
+    const textNode = document.createTextNode(convertTextVariables(skeleton, componentName, componentKey));
     dom.appendChild(textNode);
     return;
   }
@@ -142,32 +143,17 @@ function mountComponent(dom, skeleton, elementKey) {
   const elem = document.createElement(skeleton.tag);
 
   for (const key in skeleton.attrs) {
-    const result = convertTextVariables(elementKey, skeleton.attrs[key])
     if (key.startsWith("on")) {
-      elem.addEventListener(key.substr(2),
-        () => {
-          result
-            (
-              Lucid.app.page.elements[elementKey].state,
-              (newState) => {
-                // Save the new state
-                Lucid.app.page.elements[elementKey].state = newState;
-
-                // Re-render the element
-                //const dom = Lucid.app.page.elements[componentName + componentKey].dom;
-                //dom.innerHTML = Lucid.app.components[componentName].render();
-                //registerDom(dom, componentName, componentKey);
-              }
-            )
-        })
+      elem.addEventListener(key.substr(2), skeleton.attrs[key]);
     }
     else {
+      const result = convertTextVariables(skeleton.attrs[key], componentName, componentKey)
       elem.setAttribute(key, result);
     }
   }
 
   for (let i = 0; i < skeleton.children.length; ++i)
-    mountComponent(elem, skeleton.children[i], elementKey);
+    mountComponent(elem, skeleton.children[i], componentName, componentKey);
 
   dom.appendChild(elem);
 }
@@ -178,8 +164,26 @@ function mountComponent(dom, skeleton, elementKey) {
  * @param {Skeleton} skeleton 
  * @param {number} elementKey 
  */
-function updateComponent(dom, skeleton, elementKey) {
+function updateComponent(dom, skeleton, componentName, componentKey) {
+  console.log(dom)
+  console.log(skeleton)
+  if (typeof skeleton === "string") {
+    dom.nodeValue = convertTextVariables(skeleton, componentName, componentKey);
+    return;
+  }
 
+  for (const key in skeleton.attrs) {
+    // Only change the attributes that are not functions,
+    // because only {{state.name}} attributes can change
+    if (typeof skeleton.attrs[key] !== "function") {
+      const result = convertTextVariables(skeleton.attrs[key], componentName, componentKey);
+      dom.setAttribute(key, result);
+    }
+  }
+
+  for (let i = 0; i < dom.childNodes.length; ++i) {
+    updateComponent(dom.childNodes[i], skeleton.children[i], componentName, componentKey);
+  }
 }
 
 /**
@@ -213,7 +217,7 @@ function mountPage(dom, skeleton) {
       // Create the skeleton out of the first element node
       for (let i = 0; i < elem.childNodes.length; ++i)
         if (elem.childNodes[i].nodeType === Node.ELEMENT_NODE) {
-          Lucid.app.components[componentName].skeleton = createSkeleton(elem.childNodes[i]);
+          Lucid.app.components[componentName].skeleton = createSkeleton(elem.childNodes[i], componentName, componentKey);
           break;
         }
 
@@ -225,13 +229,12 @@ function mountPage(dom, skeleton) {
     // Save component's state, methods and DOM into lucid for later use
     Lucid.app.page.elements[elementKey] = {
       state: Lucid.app.components[componentName].state,
-      methods: Lucid.app.components[componentName].methods,
       dom: elem
     };
 
     mountComponent(Lucid.app.page.elements[elementKey].dom,
       Lucid.app.components[componentName].skeleton,
-      elementKey);
+      componentName, componentKey);
   }
 
   for (let i = 0; i < skeleton.children.length; ++i)
@@ -246,7 +249,7 @@ function mountPage(dom, skeleton) {
  * 
  * @returns {Skeleton} Skeleton
  */
-function createSkeleton(child) {
+function createSkeleton(child, componentName, componentKey) {
   if (child.nodeType !== Node.ELEMENT_NODE) {
     const nodeValue = child.nodeValue.trim();
     if (nodeValue !== "") {
@@ -262,12 +265,36 @@ function createSkeleton(child) {
     children: []
   };
 
-  for (let i = 0; i < child.attributes.length; ++i)
-    if (child.attributes[i].specified)
-      skeleton.attrs[child.attributes[i].name] = child.attributes[i].value;
+  for (let i = 0; i < child.attributes.length; ++i) {
+    if (child.attributes[i].specified) {
+      if (child.attributes[i].name.startsWith("on")) {
+        const elementKey = componentName + componentKey;
+        const func = convertTextVariables(child.attributes[i].value, componentName);
+        const attr = function () {
+          func
+            (
+              Lucid.app.page.elements[elementKey].state,
+              (newState) => {
+                // Save the new state
+                Lucid.app.page.elements[elementKey].state = newState;
+                console.log(newState)
+
+                // Re-render the element
+                updateComponent(Lucid.app.page.elements[elementKey].dom.firstChild,
+                  Lucid.app.components[componentName].skeleton,
+                  componentName, componentKey);
+              }
+            )
+        };
+        skeleton.attrs[child.attributes[i].name] = attr;
+      } else {
+        skeleton.attrs[child.attributes[i].name] = child.attributes[i].value;
+      }
+    }
+  }
 
   for (let i = 0; i < child.childNodes.length; ++i) {
-    const childSkeleton = createSkeleton(child.childNodes[i]);
+    const childSkeleton = createSkeleton(child.childNodes[i], componentName, componentKey);
 
     if (childSkeleton)
       skeleton.children.push(childSkeleton);
@@ -278,35 +305,48 @@ function createSkeleton(child) {
 
 /**
  * Replaces text variables(e.g. {{state.count}}) with their correct value that's saved in either state or methods.
- * @param {string} elementKey 
- * @param {string} text
- *
+ * @param {string} text 
+ * @param {string} componentName Name of the component that the text variable belongs to.
+ * @param {number} [componentKey] If key is provided, state will be used to convert the text, methods otherwise.
+ * 
  * @returns {string | Function} Text with the variables replaced or function converted from string variable
  */
-function convertTextVariables(elementKey, text) {
+function convertTextVariables(text, componentName, componentKey) {
   let startIndex = 0;
   let endIndex = 0;
 
-  while (
-    (startIndex = text.indexOf("{{", startIndex)) > -1 &&
-    (endIndex = text.indexOf("}}", startIndex + 2))
-  ) {
-    let variable = text.substring(startIndex + 2, endIndex);
+  if (!componentKey) {
+    startIndex = text.indexOf("{{", startIndex);
+    endIndex = text.indexOf("}}", startIndex + 2);
 
-    let properties = variable.split(".");
+    const variable = text.substring(startIndex + 2, endIndex);
+    const properties = variable.split(".");
 
-    let tempObj = Lucid.app.page.elements[elementKey];
+    let tempObj = Lucid.app.components[componentName];
     for (let i = 0; i < properties.length; ++i)
       tempObj = tempObj[properties[i]];
 
-    if (typeof tempObj === "function")
-      return tempObj;
-    else
+    return tempObj;
+  } else {
+    const elementKey = componentName + componentKey;
+
+    while (
+      (startIndex = text.indexOf("{{", startIndex)) > -1 &&
+      (endIndex = text.indexOf("}}", startIndex + 2))
+    ) {
+      const variable = text.substring(startIndex + 2, endIndex);
+      const properties = variable.split(".");
+
+      let tempObj = Lucid.app.page.elements[elementKey];
+      for (let i = 0; i < properties.length; ++i)
+        tempObj = tempObj[properties[i]];
+
       text = text.replace("{{" + variable + "}}", tempObj);
 
-    startIndex = 0;
-    endIndex = 0;
-  }
+      startIndex = 0;
+      endIndex = 0;
+    }
 
-  return text;
+    return text;
+  }
 }

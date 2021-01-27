@@ -14,6 +14,12 @@ const Counter = Lucid.createComponent("Counter", {
       <h1 onclick="{{methods.increment}}">Count: {{state.count}}</h1>
     </div>
     `;
+  },
+  hooks: {
+    created: function () { console.log("Component created!"); },
+    mounted: function () { console.log("Component mounted!"); },
+    unmounted: function () { console.log("Component unmounted!"); },
+    updated: function () { console.log("Component updated!"); }
   }
 });
 /* --- COMPONENTS --- */

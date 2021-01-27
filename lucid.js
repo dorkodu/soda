@@ -32,11 +32,20 @@ export const Lucid = {
  * @property {object} state 
  * @property {Function} render 
  * @property {object} methods 
- * @property {any} hooks
+ * @property {Hooks} hooks
  * @property {any} attributes 
  * @property {any} key
  * @property {any} watch 
  * @property {Skeleton} skeleton
+ */
+
+/**
+ * @typedef {object} Hooks
+ * 
+ * @property {Function} [created]
+ * @property {Function} [mounted]
+ * @property {Function} [unmounted] // TODO: Implement
+ * @property {Function} [updated]
  */
 
 /**
@@ -54,7 +63,7 @@ export const Lucid = {
  * @param {object} [properties.state] 
  * @param {object} [properties.methods] 
  * @param {() => string} properties.render
- * @param {any} [properties.hooks]
+ * @param {Hooks} [properties.hooks]
  * @param {any} [properties.attributes]
  * @param {any} [properties.watch]
  * 
@@ -165,8 +174,6 @@ function mountComponent(dom, skeleton, componentName, componentKey) {
  * @param {number} elementKey 
  */
 function updateComponent(dom, skeleton, componentName, componentKey) {
-  console.log(dom)
-  console.log(skeleton)
   if (typeof skeleton === "string") {
     dom.nodeValue = convertTextVariables(skeleton, componentName, componentKey);
     return;
@@ -210,6 +217,7 @@ function mountPage(dom, skeleton) {
 
   // If component name and key are present in the node, it's a lucid component
   if (componentName || componentKey) {
+    // If lucid component's skeleton is not initialized, initialize it
     if (!Lucid.app.components[componentName].skeleton) {
       const elem = document.createElement("div");
       elem.innerHTML = Lucid.app.components[componentName].render();
@@ -222,6 +230,9 @@ function mountPage(dom, skeleton) {
         }
 
       console.log(Lucid.app.components[componentName].skeleton)
+
+      // Check if hooks exist, if exist, then call "created" function if exists
+      Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.created();
     }
 
     const elementKey = componentName + componentKey;
@@ -235,6 +246,9 @@ function mountPage(dom, skeleton) {
     mountComponent(Lucid.app.page.elements[elementKey].dom,
       Lucid.app.components[componentName].skeleton,
       componentName, componentKey);
+
+    // Check if hooks exist, if exist, then call "mounted" function if exists
+    Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.mounted();
   }
 
   for (let i = 0; i < skeleton.children.length; ++i)
@@ -277,12 +291,14 @@ function createSkeleton(child, componentName, componentKey) {
               (newState) => {
                 // Save the new state
                 Lucid.app.page.elements[elementKey].state = newState;
-                console.log(newState)
 
                 // Re-render the element
                 updateComponent(Lucid.app.page.elements[elementKey].dom.firstChild,
                   Lucid.app.components[componentName].skeleton,
                   componentName, componentKey);
+
+                // Check if hooks exist, if exist, then call "updated" function if exists
+                Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.updated();
               }
             )
         };

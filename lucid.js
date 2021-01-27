@@ -22,6 +22,7 @@ export const Lucid = {
  * @property {object} elements
  * @property {any} payload
  * @property {any} contents
+ * @property {Skeleton} skeleton
  */
 
 /**
@@ -35,6 +36,7 @@ export const Lucid = {
  * @property {any} attributes 
  * @property {any} key
  * @property {any} watch 
+ * @property {Skeleton} skeleton
  */
 
 /**
@@ -103,67 +105,24 @@ function createApp(properties) {
     page: properties.page,
     components: properties.components,
     run: function (containerId) {
-      // Get the element by id then insert the page contents into it
+      // Get the container
       this.container = document.getElementById(containerId);
-      this.container.innerHTML = this.page.contents();
 
-      // Search lucid components inside the container
-      searchComponents(this.container);
-    }
-  };
-
-  return Lucid.app;
-}
-
-/**
- * Searches for the lucid components in the given node's children,
- * if any lucid component with a key is found, saves it's state, methods and
- * DOM element. Renders it on to the screen and then registers any of it's 
- * @param {HTMLElement} node 
- */
-function searchComponents(node) {
-  node.childNodes.forEach((child) => {
-    // "lucid-component" and "lucid-key" only work with HTML elements
-    if (child.nodeType !== Node.ELEMENT_NODE)
-      return;
-
-    // Get 2 lucid attributes, "lucid-component" and "lucid-key"
-    const componentName = child.getAttribute("lucid-component");
-    const componentKey = child.getAttribute("lucid-key");
-
-    // If component name and key isn't present in the node, search it's children
-    if (!componentName || !componentKey) {
-      searchComponents(child);
-      return;
-    }
-
-    if (!Lucid.app.components[componentName].skeleton) {
       const elem = document.createElement("div");
-      elem.innerHTML = Lucid.app.components[componentName].render();
+      elem.innerHTML = this.page.contents();
 
       // Create the skeleton out of the first element node
       for (let i = 0; i < elem.childNodes.length; ++i)
         if (elem.childNodes[i].nodeType === Node.ELEMENT_NODE) {
-          Lucid.app.components[componentName].skeleton = createSkeleton(elem.childNodes[i]);
+          this.page.skeleton = createSkeleton(elem.childNodes[i]);
+          mountPage(this.container, this.page.skeleton);
+          console.log(this.page.skeleton)
           break;
         }
-
-      console.log(Lucid.app.components[componentName].skeleton)
     }
+  };
 
-    const elementKey = componentName + componentKey;
-
-    // Save component's state, methods and DOM into lucid for later use
-    Lucid.app.page.elements[elementKey] = {
-      state: Lucid.app.components[componentName].state,
-      methods: Lucid.app.components[componentName].methods,
-      dom: child
-    };
-
-    mount(Lucid.app.page.elements[elementKey].dom,
-      Lucid.app.components[componentName].skeleton,
-      elementKey);
-  });
+  return Lucid.app;
 }
 
 /**
@@ -172,7 +131,7 @@ function searchComponents(node) {
  * @param {Skeleton} skeleton 
  * @param {number} elementKey 
  */
-function mount(dom, skeleton, elementKey) {
+function mountComponent(dom, skeleton, elementKey) {
   // If skeleton is a string, it's a text node that is the only child
   if (typeof skeleton === "string") {
     const textNode = document.createTextNode(convertTextVariables(elementKey, skeleton));
@@ -193,7 +152,6 @@ function mount(dom, skeleton, elementKey) {
               (newState) => {
                 // Save the new state
                 Lucid.app.page.elements[elementKey].state = newState;
-                console.log(newState);
 
                 // Re-render the element
                 //const dom = Lucid.app.page.elements[componentName + componentKey].dom;
@@ -209,7 +167,75 @@ function mount(dom, skeleton, elementKey) {
   }
 
   for (let i = 0; i < skeleton.children.length; ++i)
-    mount(elem, skeleton.children[i], elementKey);
+    mountComponent(elem, skeleton.children[i], elementKey);
+
+  dom.appendChild(elem);
+}
+
+/**
+ * 
+ * @param {HTMLElement} dom 
+ * @param {Skeleton} skeleton 
+ * @param {number} elementKey 
+ */
+function updateComponent(dom, skeleton, elementKey) {
+
+}
+
+/**
+ * 
+ * @param {HTMLElement} dom 
+ * @param {Skeleton} skeleton 
+ */
+function mountPage(dom, skeleton) {
+  // If skeleton is a string, it's a text node that is the only child
+  if (typeof skeleton === "string") {
+    const textNode = document.createTextNode(skeleton);
+    dom.appendChild(textNode);
+    return;
+  }
+
+  const elem = document.createElement(skeleton.tag);
+
+  for (const key in skeleton.attrs)
+    elem.setAttribute(key, skeleton.attrs[key]);
+
+  // Get 2 lucid attributes, "lucid-component" and "lucid-key"
+  const componentName = elem.getAttribute("lucid-component");
+  const componentKey = elem.getAttribute("lucid-key");
+
+  // If component name and key are present in the node, it's a lucid component
+  if (componentName || componentKey) {
+    if (!Lucid.app.components[componentName].skeleton) {
+      const elem = document.createElement("div");
+      elem.innerHTML = Lucid.app.components[componentName].render();
+
+      // Create the skeleton out of the first element node
+      for (let i = 0; i < elem.childNodes.length; ++i)
+        if (elem.childNodes[i].nodeType === Node.ELEMENT_NODE) {
+          Lucid.app.components[componentName].skeleton = createSkeleton(elem.childNodes[i]);
+          break;
+        }
+
+      console.log(Lucid.app.components[componentName].skeleton)
+    }
+
+    const elementKey = componentName + componentKey;
+
+    // Save component's state, methods and DOM into lucid for later use
+    Lucid.app.page.elements[elementKey] = {
+      state: Lucid.app.components[componentName].state,
+      methods: Lucid.app.components[componentName].methods,
+      dom: elem
+    };
+
+    mountComponent(Lucid.app.page.elements[elementKey].dom,
+      Lucid.app.components[componentName].skeleton,
+      elementKey);
+  }
+
+  for (let i = 0; i < skeleton.children.length; ++i)
+    mountPage(elem, skeleton.children[i]);
 
   dom.appendChild(elem);
 }
@@ -223,8 +249,9 @@ function mount(dom, skeleton, elementKey) {
 function createSkeleton(child) {
   if (child.nodeType !== Node.ELEMENT_NODE) {
     const nodeValue = child.nodeValue.trim();
-    if (nodeValue !== "")
+    if (nodeValue !== "") {
       return nodeValue;
+    }
 
     return null;
   }

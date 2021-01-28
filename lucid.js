@@ -2,9 +2,12 @@ export const Lucid = {
   createComponent: createComponent,
   createPage: createPage,
   createApp: createApp,
+  disconnectComponent: disconnectComponent,
   /** @type {App} */
   app: {}
 };
+
+window.Lucid = Lucid;
 
 /**
  * @typedef {object} App
@@ -19,7 +22,8 @@ export const Lucid = {
  * 
  * @property {string} path
  * @property {string} name
- * @property {object} elements
+ * @property {Array.<{state: object, dom: HTMLElement}>} elements
+ * @property {Hooks} hooks
  * @property {any} payload
  * @property {any} contents
  * @property {Skeleton} skeleton
@@ -31,10 +35,10 @@ export const Lucid = {
  * @property {string} name
  * @property {object} state 
  * @property {Function} render 
- * @property {object} methods 
+ * @property {Object.<string, Function>} methods 
  * @property {Hooks} hooks
  * @property {any} attributes 
- * @property {any} key
+ * @property {string} key
  * @property {any} watch 
  * @property {Skeleton} skeleton
  */
@@ -43,8 +47,8 @@ export const Lucid = {
  * @typedef {object} Hooks
  * 
  * @property {Function} [created]
- * @property {Function} [mounted]
- * @property {Function} [unmounted] // TODO: Implement
+ * @property {Function} [connected]
+ * @property {Function} [disconnected] 
  * @property {Function} [updated]
  */
 
@@ -61,7 +65,7 @@ export const Lucid = {
  * @param {string} name HTML tag name 
  * @param {object} properties
  * @param {object} [properties.state] 
- * @param {object} [properties.methods] 
+ * @param {Object.<string, Function>} [properties.methods] 
  * @param {() => string} properties.render
  * @param {Hooks} [properties.hooks]
  * @param {any} [properties.attributes]
@@ -88,6 +92,7 @@ function createComponent(name, properties) {
  * @param {string} properties.name
  * @param {any} [properties.payload]
  * @param {Function} properties.contents
+ * @param {Hooks} [properties.hooks]
  * 
  * @returns {Page} Page
  */
@@ -97,7 +102,8 @@ function createPage(properties) {
     name: properties.name,
     elements: {},
     payload: properties.payload,
-    contents: properties.contents
+    contents: properties.contents,
+    hooks: properties.hooks
   };
 }
 
@@ -105,7 +111,7 @@ function createPage(properties) {
  * Returns the app that's created from given properties.
  * @param {object} properties 
  * @param {Page} properties.page 
- * @param {{string: Component}} [properties.components]
+ * @param {Object.<string, Component>} [properties.components]
  * 
  * @returns {App} App
  */
@@ -124,8 +130,14 @@ function createApp(properties) {
       for (let i = 0; i < elem.childNodes.length; ++i)
         if (elem.childNodes[i].nodeType === Node.ELEMENT_NODE) {
           this.page.skeleton = createSkeleton(elem.childNodes[i]);
-          mountPage(this.container, this.page.skeleton);
-          console.log(this.page.skeleton)
+
+          // Check if hooks exist, if exist, then call "created" function if exists
+          Lucid.app.page.hooks && Lucid.app.page.hooks.created && Lucid.app.page.hooks.created();
+
+          connectPage(this.container, this.page.skeleton);
+
+          // Check if hooks exist, if exist, then call "connected" function if exists
+          Lucid.app.page.hooks && Lucid.app.page.hooks.connected && Lucid.app.page.hooks.connected();
           break;
         }
     }
@@ -141,7 +153,7 @@ function createApp(properties) {
  * @param {string} componentName 
  * @param {number} componentKey 
  */
-function mountComponent(dom, skeleton, componentName, componentKey) {
+function connectComponent(dom, skeleton, componentName, componentKey) {
   // If skeleton is a string, it's a text node that is the only child
   if (typeof skeleton === "string") {
     const textNode = document.createTextNode(convertTextVariables(skeleton, componentName, componentKey));
@@ -153,7 +165,25 @@ function mountComponent(dom, skeleton, componentName, componentKey) {
 
   for (const key in skeleton.attrs) {
     if (key.startsWith("on")) {
-      elem.addEventListener(key.substr(2), skeleton.attrs[key]);
+      elem.addEventListener(key.substr(2), function () {
+        skeleton.attrs[key].call({
+          name: componentName,
+          key: componentKey,
+          state: Lucid.app.page.elements[componentName + componentKey].state,
+          setState: function (newState) {
+            // Save the new state
+            Lucid.app.page.elements[componentName + componentKey].state = newState;
+
+            // Re-render the element
+            updateComponent(Lucid.app.page.elements[componentName + componentKey].dom.firstChild,
+              Lucid.app.components[componentName].skeleton,
+              componentName, componentKey);
+
+            // Check if hooks exist, if exist, then call "updated" function if exists
+            Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.updated && Lucid.app.components[componentName].hooks.updated();
+          }
+        })
+      });
     }
     else {
       const result = convertTextVariables(skeleton.attrs[key], componentName, componentKey)
@@ -162,9 +192,27 @@ function mountComponent(dom, skeleton, componentName, componentKey) {
   }
 
   for (let i = 0; i < skeleton.children.length; ++i)
-    mountComponent(elem, skeleton.children[i], componentName, componentKey);
+    connectComponent(elem, skeleton.children[i], componentName, componentKey);
 
   dom.appendChild(elem);
+}
+
+/**
+ * 
+ * @param {string} componentName Name of the component. 
+ * @param {string} componentKey Key of the component.
+ */
+function disconnectComponent(componentName, componentKey) {
+  const elementKey = componentName + componentKey;
+  const dom = Lucid.app.page.elements[elementKey].dom;
+
+  // Remove the component from the dom, then call "disconnected" hook
+  dom.parentNode.removeChild(dom);
+
+  // Check if hooks exist, if exist, then call "disconnected" function if exists
+  Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.disconnected && Lucid.app.components[componentName].hooks.disconnected();
+
+  Lucid.app.page.elements[elementKey] = undefined;
 }
 
 /**
@@ -198,7 +246,7 @@ function updateComponent(dom, skeleton, componentName, componentKey) {
  * @param {HTMLElement} dom 
  * @param {Skeleton} skeleton 
  */
-function mountPage(dom, skeleton) {
+function connectPage(dom, skeleton) {
   // If skeleton is a string, it's a text node that is the only child
   if (typeof skeleton === "string") {
     const textNode = document.createTextNode(skeleton);
@@ -225,14 +273,9 @@ function mountPage(dom, skeleton) {
       // Create the skeleton out of the first element node
       for (let i = 0; i < elem.childNodes.length; ++i)
         if (elem.childNodes[i].nodeType === Node.ELEMENT_NODE) {
-          Lucid.app.components[componentName].skeleton = createSkeleton(elem.childNodes[i], componentName, componentKey);
+          Lucid.app.components[componentName].skeleton = createSkeleton(elem.childNodes[i], componentName);
           break;
         }
-
-      console.log(Lucid.app.components[componentName].skeleton)
-
-      // Check if hooks exist, if exist, then call "created" function if exists
-      Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.created();
     }
 
     const elementKey = componentName + componentKey;
@@ -243,16 +286,19 @@ function mountPage(dom, skeleton) {
       dom: elem
     };
 
-    mountComponent(Lucid.app.page.elements[elementKey].dom,
+    // Check if hooks exist, if exist, then call "created" function if exists
+    Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.created && Lucid.app.components[componentName].hooks.created();
+
+    connectComponent(Lucid.app.page.elements[elementKey].dom,
       Lucid.app.components[componentName].skeleton,
       componentName, componentKey);
 
-    // Check if hooks exist, if exist, then call "mounted" function if exists
-    Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.mounted();
+    // Check if hooks exist, if exist, then call "connected" function if exists
+    Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.connected && Lucid.app.components[componentName].hooks.connected();
   }
 
   for (let i = 0; i < skeleton.children.length; ++i)
-    mountPage(elem, skeleton.children[i]);
+    connectPage(elem, skeleton.children[i]);
 
   dom.appendChild(elem);
 }
@@ -260,10 +306,11 @@ function mountPage(dom, skeleton) {
 /**
  * 
  * @param {HTMLElement} child 
+ * @param {string} [componentName]  If componentName is not provided, it creates a skeleton out of a page, otherwise out of a component.
  * 
  * @returns {Skeleton} Skeleton
  */
-function createSkeleton(child, componentName, componentKey) {
+function createSkeleton(child, componentName) {
   if (child.nodeType !== Node.ELEMENT_NODE) {
     const nodeValue = child.nodeValue.trim();
     if (nodeValue !== "") {
@@ -282,27 +329,8 @@ function createSkeleton(child, componentName, componentKey) {
   for (let i = 0; i < child.attributes.length; ++i) {
     if (child.attributes[i].specified) {
       if (child.attributes[i].name.startsWith("on")) {
-        const elementKey = componentName + componentKey;
         const func = convertTextVariables(child.attributes[i].value, componentName);
-        const attr = function () {
-          func
-            (
-              Lucid.app.page.elements[elementKey].state,
-              (newState) => {
-                // Save the new state
-                Lucid.app.page.elements[elementKey].state = newState;
-
-                // Re-render the element
-                updateComponent(Lucid.app.page.elements[elementKey].dom.firstChild,
-                  Lucid.app.components[componentName].skeleton,
-                  componentName, componentKey);
-
-                // Check if hooks exist, if exist, then call "updated" function if exists
-                Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.updated();
-              }
-            )
-        };
-        skeleton.attrs[child.attributes[i].name] = attr;
+        skeleton.attrs[child.attributes[i].name] = func;
       } else {
         skeleton.attrs[child.attributes[i].name] = child.attributes[i].value;
       }
@@ -310,7 +338,7 @@ function createSkeleton(child, componentName, componentKey) {
   }
 
   for (let i = 0; i < child.childNodes.length; ++i) {
-    const childSkeleton = createSkeleton(child.childNodes[i], componentName, componentKey);
+    const childSkeleton = createSkeleton(child.childNodes[i], componentName);
 
     if (childSkeleton)
       skeleton.children.push(childSkeleton);

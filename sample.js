@@ -4,8 +4,8 @@ import { Lucid } from "./lucid.js";
 const Counter = Lucid.createComponent("Counter", {
   state: { count: 0 },
   methods: {
-    increment: (state, setState) => {
-      setState({ count: state.count + 1 });
+    increment: function () {
+      this.setState({ count: this.state.count + 1 });
     }
   },
   render() {
@@ -17,8 +17,8 @@ const Counter = Lucid.createComponent("Counter", {
   },
   hooks: {
     created: function () { console.log("Component created!"); },
-    mounted: function () { console.log("Component mounted!"); },
-    unmounted: function () { console.log("Component unmounted!"); },
+    connected: function () { console.log("Component connected!"); },
+    disconnected: function () { console.log("Component disconnected!"); },
     updated: function () { console.log("Component updated!"); }
   }
 });
@@ -39,6 +39,12 @@ const HomePage = Lucid.createPage({
         </div>
       </div>
     `;
+  },
+  hooks: {
+    created: function () { console.log("Page created!"); },
+    connected: function () { console.log("Page connected!"); },
+    disconnected: function () { console.log("Page disconnected!"); },
+    updated: function () { console.log("Page updated!"); }
   }
 });
 /* --- PAGES --- */

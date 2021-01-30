@@ -2,12 +2,11 @@ export const Lucid = {
   createComponent: createComponent,
   createPage: createPage,
   createApp: createApp,
-  disconnectComponent: disconnectComponent,
+  renderComponent: renderComponent,
+  removeComponent: disconnectComponent,
   /** @type {App} */
   app: {}
 };
-
-window.Lucid = Lucid;
 
 /**
  * @typedef {object} App
@@ -149,9 +148,49 @@ function createApp(properties) {
 /**
  * 
  * @param {HTMLElement} dom 
+ * @param {string} componentName 
+ * @param {string | number} componentKey 
+ */
+function renderComponent(dom, componentName, componentKey) {
+  // If the component that is going to be rendered does not have a skeleton yet, create a skeleton for it
+  if (!Lucid.app.components[componentName].skeleton) {
+    const elem = document.createElement("div");
+    elem.innerHTML = Lucid.app.components[componentName].render();
+
+    // Create the skeleton out of the first element node
+    for (let i = 0; i < elem.childNodes.length; ++i)
+      if (elem.childNodes[i].nodeType === Node.ELEMENT_NODE) {
+        Lucid.app.components[componentName].skeleton = createSkeleton(elem.childNodes[i], componentName);
+        break;
+      }
+  }
+
+  const elem = document.createElement("div");
+  elem.setAttribute("lucid-component", componentName);
+  elem.setAttribute("lucid-key", componentKey);
+
+  // Save component's state and DOM into lucid for later use
+  Lucid.app.page.elements[componentName + componentKey] = {
+    state: Lucid.app.components[componentName].state,
+    dom: elem
+  };
+
+  // Check if hooks exist, if exist, then call "created" function if exists
+  Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.created && Lucid.app.components[componentName].hooks.created.call(getThisParameter(componentName, componentKey));
+
+  connectComponent(elem, Lucid.app.components[componentName].skeleton, componentName, componentKey);
+  dom.appendChild(elem);
+
+  // Check if hooks exist, if exist, then call "connected" function if exists
+  Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.connected && Lucid.app.components[componentName].hooks.connected.call(getThisParameter(componentName, componentKey));
+}
+
+/**
+ * 
+ * @param {HTMLElement} dom 
  * @param {Skeleton} skeleton 
  * @param {string} componentName 
- * @param {number} componentKey 
+ * @param {string | number} componentKey 
  */
 function connectComponent(dom, skeleton, componentName, componentKey) {
   // If skeleton is a string, it's a text node that is the only child
@@ -166,23 +205,7 @@ function connectComponent(dom, skeleton, componentName, componentKey) {
   for (const key in skeleton.attrs) {
     if (key.startsWith("on")) {
       elem.addEventListener(key.substr(2), function () {
-        skeleton.attrs[key].call({
-          name: componentName,
-          key: componentKey,
-          state: Lucid.app.page.elements[componentName + componentKey].state,
-          setState: function (newState) {
-            // Save the new state
-            Lucid.app.page.elements[componentName + componentKey].state = newState;
-
-            // Re-render the element
-            updateComponent(Lucid.app.page.elements[componentName + componentKey].dom.firstChild,
-              Lucid.app.components[componentName].skeleton,
-              componentName, componentKey);
-
-            // Check if hooks exist, if exist, then call "updated" function if exists
-            Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.updated && Lucid.app.components[componentName].hooks.updated();
-          }
-        })
+        skeleton.attrs[key].call(getThisParameter(componentName, componentKey));
       });
     }
     else {
@@ -200,7 +223,7 @@ function connectComponent(dom, skeleton, componentName, componentKey) {
 /**
  * 
  * @param {string} componentName Name of the component. 
- * @param {string} componentKey Key of the component.
+ * @param {string | number} componentKey Key of the component.
  */
 function disconnectComponent(componentName, componentKey) {
   const elementKey = componentName + componentKey;
@@ -210,7 +233,7 @@ function disconnectComponent(componentName, componentKey) {
   dom.parentNode.removeChild(dom);
 
   // Check if hooks exist, if exist, then call "disconnected" function if exists
-  Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.disconnected && Lucid.app.components[componentName].hooks.disconnected();
+  Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.disconnected && Lucid.app.components[componentName].hooks.disconnected.call(getThisParameter(componentName, componentKey));
 
   Lucid.app.page.elements[elementKey] = undefined;
 }
@@ -280,21 +303,21 @@ function connectPage(dom, skeleton) {
 
     const elementKey = componentName + componentKey;
 
-    // Save component's state, methods and DOM into lucid for later use
+    // Save component's state and DOM into lucid for later use
     Lucid.app.page.elements[elementKey] = {
       state: Lucid.app.components[componentName].state,
       dom: elem
     };
 
     // Check if hooks exist, if exist, then call "created" function if exists
-    Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.created && Lucid.app.components[componentName].hooks.created();
+    Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.created && Lucid.app.components[componentName].hooks.created.call(getThisParameter(componentName, componentKey));
 
     connectComponent(Lucid.app.page.elements[elementKey].dom,
       Lucid.app.components[componentName].skeleton,
       componentName, componentKey);
 
     // Check if hooks exist, if exist, then call "connected" function if exists
-    Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.connected && Lucid.app.components[componentName].hooks.connected();
+    Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.connected && Lucid.app.components[componentName].hooks.connected.call(getThisParameter(componentName, componentKey));
   }
 
   for (let i = 0; i < skeleton.children.length; ++i)
@@ -348,6 +371,35 @@ function createSkeleton(child, componentName) {
 }
 
 /**
+ * 
+ * @param {string} componentName Name of the component.
+ * @param {string | number} componentKey Key of the component.
+ * 
+ * @returns {{name: string, key: string, dom: HTMLElement, state: object, setState: (newState: object) => void}
+ */
+function getThisParameter(componentName, componentKey) {
+  const elementKey = componentName + componentKey;
+  return {
+    name: componentName,
+    key: componentKey,
+    dom: Lucid.app.page.elements[elementKey].dom.firstChild,
+    state: Lucid.app.page.elements[elementKey].state,
+    setState: function (newState) {
+      // Save the new state
+      Lucid.app.page.elements[elementKey].state = newState;
+
+      // Re-render the element
+      updateComponent(Lucid.app.page.elements[elementKey].dom.firstChild,
+        Lucid.app.components[componentName].skeleton,
+        componentName, componentKey);
+
+      // Check if hooks exist, if exist, then call "updated" function if exists
+      Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.updated && Lucid.app.components[componentName].hooks.updated.call(this);
+    }
+  };
+}
+
+/**
  * Replaces text variables(e.g. {{state.count}}) with their correct value that's saved in either state or methods.
  * @param {string} text 
  * @param {string} componentName Name of the component that the text variable belongs to.
@@ -356,6 +408,9 @@ function createSkeleton(child, componentName) {
  * @returns {string | Function} Text with the variables replaced or function converted from string variable
  */
 function convertTextVariables(text, componentName, componentKey) {
+  // Convert key to string because if the key is 0, wrong things may happen
+  componentKey = componentKey.toString();
+
   let startIndex = 0;
   let endIndex = 0;
 

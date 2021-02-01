@@ -33,7 +33,7 @@ export const Lucid = {
  * 
  * @property {string} name
  * @property {object} state 
- * @property {() = > string} render 
+ * @property {Function} render 
  * @property {Object.<string, Function>} methods 
  * @property {Hooks} hooks
  * @property {any} attributes 
@@ -155,11 +155,7 @@ function renderComponent(dom, componentName, componentKey) {
   // If the component that is going to be rendered does not have a skeleton yet, create a skeleton for it
   if (!Lucid.app.components[componentName].skeleton) {
     const elem = document.createElement("div");
-
-    // Fix bug with src, if src is set, it will request the src and
-    // will fail if it's a string variable (e.g. {{state.photoPath}})
-    let elemHTML = Lucid.app.components[componentName].render();
-    elem.innerHTML = elemHTML.replace("src=\"", "srcName=\"");
+    elem.innerHTML = Lucid.app.components[componentName].render();
 
     // Create the skeleton out of the first element node
     for (let i = 0; i < elem.childNodes.length; ++i)
@@ -214,10 +210,7 @@ function connectComponent(dom, skeleton, componentName, componentKey) {
     }
     else {
       const result = convertTextVariables(skeleton.attrs[key], componentName, componentKey)
-
-      // Fix bug with src, if src is set, it will request the src and
-      // will fail if it's a string variable (e.g. {{state.photoPath}})
-      elem.setAttribute(key === "srcname" ? "src" : key, result);
+      elem.setAttribute(key, result);
     }
   }
 
@@ -298,11 +291,7 @@ function connectPage(dom, skeleton) {
     // If lucid component's skeleton is not initialized, initialize it
     if (!Lucid.app.components[componentName].skeleton) {
       const elem = document.createElement("div");
-
-      // Fix bug with src, if src is set, it will request the src and
-      // will fail if it's a string variable (e.g. {{state.photoPath}})
-      let elemHTML = Lucid.app.components[componentName].render();
-      elem.innerHTML = elemHTML.replace("src=\"", "srcName=\"");
+      elem.innerHTML = Lucid.app.components[componentName].render();
 
       // Create the skeleton out of the first element node
       for (let i = 0; i < elem.childNodes.length; ++i)

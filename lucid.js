@@ -159,7 +159,7 @@ function renderComponent(dom, componentName, componentKey) {
     // Fix bug with src, if src is set, it will request the src and
     // will fail if it's a string variable (e.g. {{state.photoPath}})
     let elemHTML = Lucid.app.components[componentName].render();
-    elem.innerHTML = elemHTML.replace("src=\"", "srcName=\"");
+    elem.innerHTML = elemHTML.replace("src=", "srcName=");
 
     // Create the skeleton out of the first element node
     for (let i = 0; i < elem.childNodes.length; ++i)
@@ -302,7 +302,7 @@ function connectPage(dom, skeleton) {
       // Fix bug with src, if src is set, it will request the src and
       // will fail if it's a string variable (e.g. {{state.photoPath}})
       let elemHTML = Lucid.app.components[componentName].render();
-      elem.innerHTML = elemHTML.replace("src=\"", "srcName=\"");
+      elem.innerHTML = elemHTML.replace("src=", "srcName=");
 
       // Create the skeleton out of the first element node
       for (let i = 0; i < elem.childNodes.length; ++i)

@@ -150,8 +150,9 @@ function createApp(properties) {
  * @param {HTMLElement} dom 
  * @param {string} componentName 
  * @param {string | number} componentKey 
+ * @param {boolean} [hasOwnContainer]
  */
-function renderComponent(dom, componentName, componentKey) {
+function renderComponent(dom, componentName, componentKey, hasOwnContainer) {
   // If the component that is going to be rendered does not have a skeleton yet, create a skeleton for it
   if (!Lucid.app.components[componentName].skeleton) {
     const elem = document.createElement("div");
@@ -169,9 +170,14 @@ function renderComponent(dom, componentName, componentKey) {
       }
   }
 
-  const elem = document.createElement("div");
-  elem.setAttribute("lucid-component", componentName);
-  elem.setAttribute("lucid-key", componentKey);
+  let elem;
+  if (!hasOwnContainer) {
+    elem = document.createElement("div");
+    elem.setAttribute("lucid-component", componentName);
+    elem.setAttribute("lucid-key", componentKey);
+  } else {
+    elem = dom;
+  }
 
   // Save component's state and DOM into lucid for later use
   Lucid.app.page.elements[componentName + componentKey] = {
@@ -183,7 +189,7 @@ function renderComponent(dom, componentName, componentKey) {
   Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.created && Lucid.app.components[componentName].hooks.created.call(getThisParameter(componentName, componentKey));
 
   connectComponent(elem, Lucid.app.components[componentName].skeleton, componentName, componentKey);
-  dom.appendChild(elem);
+  if (!hasOwnContainer) dom.appendChild(elem);
 
   // Check if hooks exist, if exist, then call "connected" function if exists
   Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.connected && Lucid.app.components[componentName].hooks.connected.call(getThisParameter(componentName, componentKey));
@@ -294,42 +300,8 @@ function connectPage(dom, skeleton) {
   const componentKey = elem.getAttribute("lucid-key");
 
   // If component name and key are present in the node, it's a lucid component
-  if (componentName || componentKey) {
-    // If lucid component's skeleton is not initialized, initialize it
-    if (!Lucid.app.components[componentName].skeleton) {
-      const elem = document.createElement("div");
-
-      // Fix bug with src, if src is set, it will request the src and
-      // will fail if it's a string variable (e.g. {{state.photoPath}})
-      let elemHTML = Lucid.app.components[componentName].render();
-      elem.innerHTML = elemHTML.replace("src=", "srcName=");
-
-      // Create the skeleton out of the first element node
-      for (let i = 0; i < elem.childNodes.length; ++i)
-        if (elem.childNodes[i].nodeType === Node.ELEMENT_NODE) {
-          Lucid.app.components[componentName].skeleton = createSkeleton(elem.childNodes[i], componentName);
-          break;
-        }
-    }
-
-    const elementKey = componentName + componentKey;
-
-    // Save component's state and DOM into lucid for later use
-    Lucid.app.page.elements[elementKey] = {
-      state: Lucid.app.components[componentName].state,
-      dom: elem
-    };
-
-    // Check if hooks exist, if exist, then call "created" function if exists
-    Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.created && Lucid.app.components[componentName].hooks.created.call(getThisParameter(componentName, componentKey));
-
-    connectComponent(Lucid.app.page.elements[elementKey].dom,
-      Lucid.app.components[componentName].skeleton,
-      componentName, componentKey);
-
-    // Check if hooks exist, if exist, then call "connected" function if exists
-    Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.connected && Lucid.app.components[componentName].hooks.connected.call(getThisParameter(componentName, componentKey));
-  }
+  if (componentName || componentKey)
+    renderComponent(elem, componentName, componentKey, true);
 
   for (let i = 0; i < skeleton.children.length; ++i)
     connectPage(elem, skeleton.children[i]);
@@ -420,15 +392,13 @@ function getThisParameter(componentName, componentKey) {
  */
 function convertTextVariables(text, componentName, componentKey) {
   // Convert key to string because if the key is 0, wrong things may happen
-  componentKey = componentKey.toString();
+  if (componentKey)
+    componentKey = componentKey.toString();
 
-  let startIndex = 0;
-  let endIndex = 0;
+  let startIndex = text.indexOf("{{", 0);
+  let endIndex = text.indexOf("}}", startIndex + 2);
 
   if (!componentKey) {
-    startIndex = text.indexOf("{{", startIndex);
-    endIndex = text.indexOf("}}", startIndex + 2);
-
     const variable = text.substring(startIndex + 2, endIndex);
     const properties = variable.split(".");
 
@@ -440,10 +410,7 @@ function convertTextVariables(text, componentName, componentKey) {
   } else {
     const elementKey = componentName + componentKey;
 
-    while (
-      (startIndex = text.indexOf("{{", startIndex)) > -1 &&
-      (endIndex = text.indexOf("}}", startIndex + 2))
-    ) {
+    while (startIndex > -1 && endIndex > -1) {
       const variable = text.substring(startIndex + 2, endIndex);
       const properties = variable.split(".");
 
@@ -453,8 +420,8 @@ function convertTextVariables(text, componentName, componentKey) {
 
       text = text.replace("{{" + variable + "}}", tempObj);
 
-      startIndex = 0;
-      endIndex = 0;
+      startIndex = text.indexOf("{{", 0);
+      endIndex = text.indexOf("}}", startIndex + 2);
     }
 
     return text;

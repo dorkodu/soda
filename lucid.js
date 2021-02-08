@@ -2,8 +2,10 @@ export const Lucid = {
   createComponent: createComponent,
   createPage: createPage,
   createApp: createApp,
-  renderComponent: renderComponent,
-  removeComponent: disconnectComponent,
+  render: renderComponent,
+  remove: disconnectComponent,
+  getAttribute: getComponentAttribute,
+  setAttribute: setComponentAttribute,
   /** @type {App} */
   app: {}
 };
@@ -21,7 +23,7 @@ export const Lucid = {
  * 
  * @property {string} path
  * @property {string} name
- * @property {Array.<{state: object, dom: HTMLElement}>} elements
+ * @property {Array.<{state: object, attributes: object, dom: HTMLElement}>} elements
  * @property {Hooks} hooks
  * @property {any} payload
  * @property {any} contents
@@ -36,7 +38,7 @@ export const Lucid = {
  * @property {() = > string} render 
  * @property {Object.<string, Function>} methods 
  * @property {Hooks} hooks
- * @property {any} attributes 
+ * @property {object} attributes 
  * @property {string} key
  * @property {any} watch 
  * @property {Skeleton} skeleton
@@ -150,9 +152,10 @@ function createApp(properties) {
  * @param {HTMLElement} dom 
  * @param {string} componentName 
  * @param {string | number} componentKey 
+ * @param {object} [attributes] 
  * @param {boolean} [hasOwnContainer]
  */
-function renderComponent(dom, componentName, componentKey, hasOwnContainer) {
+function renderComponent(dom, componentName, componentKey, attributes, hasOwnContainer) {
   // If the component that is going to be rendered does not have a skeleton yet, create a skeleton for it
   if (!Lucid.app.components[componentName].skeleton) {
     const elem = document.createElement("div");
@@ -182,6 +185,7 @@ function renderComponent(dom, componentName, componentKey, hasOwnContainer) {
   // Save component's state and DOM into lucid for later use
   Lucid.app.page.elements[componentName + componentKey] = {
     state: Lucid.app.components[componentName].state,
+    attributes: attributes,
     dom: elem
   };
 
@@ -265,7 +269,7 @@ function updateComponent(dom, skeleton, componentName, componentKey) {
 
   for (const key in skeleton.attrs) {
     // Only change the attributes that are not functions,
-    // because only {{state.name}} attributes can change
+    // because only {{state.*}} attributes can change
     if (typeof skeleton.attrs[key] !== "function") {
       const result = convertTextVariables(skeleton.attrs[key], componentName, componentKey);
       dom.setAttribute(key, result);
@@ -275,6 +279,19 @@ function updateComponent(dom, skeleton, componentName, componentKey) {
   for (let i = 0; i < dom.childNodes.length; ++i) {
     updateComponent(dom.childNodes[i], skeleton.children[i], componentName, componentKey);
   }
+}
+
+function getComponentAttribute(componentName, componentkey, attribute) {
+  return Lucid.app.page.elements[componentName + componentkey].attributes[attribute];
+}
+
+function setComponentAttribute(componentName, componentKey, attribute, value) {
+  const elementKey = componentName + componentKey;
+
+  Lucid.app.page.elements[elementKey].attributes[attribute] = value;
+  updateComponent(Lucid.app.page.elements[elementKey].dom.firstChild,
+    Lucid.app.components[componentName].skeleton,
+    componentName, componentKey);
 }
 
 /**
@@ -301,7 +318,7 @@ function connectPage(dom, skeleton) {
 
   // If component name and key are present in the node, it's a lucid component
   if (componentName || componentKey)
-    renderComponent(elem, componentName, componentKey, true);
+    renderComponent(elem, componentName, componentKey, null, true);
 
   for (let i = 0; i < skeleton.children.length; ++i)
     connectPage(elem, skeleton.children[i]);
@@ -367,6 +384,7 @@ function getThisParameter(componentName, componentKey) {
     key: componentKey,
     dom: Lucid.app.page.elements[elementKey].dom.firstChild,
     state: Lucid.app.page.elements[elementKey].state,
+    attributes: Lucid.app.components[componentName].attributes,
     setState: function (newState) {
       // Save the new state
       Lucid.app.page.elements[elementKey].state = newState;
@@ -392,7 +410,7 @@ function getThisParameter(componentName, componentKey) {
  */
 function convertTextVariables(text, componentName, componentKey) {
   // Convert key to string because if the key is 0, wrong things may happen
-  if (componentKey)
+  if (componentKey != null)
     componentKey = componentKey.toString();
 
   let startIndex = text.indexOf("{{", 0);

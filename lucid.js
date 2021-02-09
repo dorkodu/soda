@@ -384,7 +384,7 @@ function getThisParameter(componentName, componentKey) {
     key: componentKey,
     dom: Lucid.app.page.elements[elementKey].dom.firstChild,
     state: Lucid.app.page.elements[elementKey].state,
-    attributes: Lucid.app.components[componentName].attributes,
+    attributes: Lucid.app.page.elements[elementKey].attributes,
     setState: function (newState) {
       // Save the new state
       Lucid.app.page.elements[elementKey].state = newState;

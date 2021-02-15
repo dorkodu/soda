@@ -40,7 +40,7 @@ export const Lucid = {
  * @property {Hooks} hooks
  * @property {object} attributes 
  * @property {string} key
- * @property {any} watch 
+ * @property {Object.<string, Function>} watch 
  * @property {Skeleton} skeleton
  */
 
@@ -69,8 +69,8 @@ export const Lucid = {
  * @param {Object.<string, Function>} [properties.methods] 
  * @param {() => string} properties.render
  * @param {Hooks} [properties.hooks]
- * @param {any} [properties.attributes]
- * @param {any} [properties.watch]
+ * @param {object} [properties.attributes]
+ * @param {Object.<string, Function>} [properties.watch]
  * 
  * @returns {Component} Component
  */
@@ -289,6 +289,10 @@ function setComponentAttribute(componentName, componentKey, attribute, value) {
   const elementKey = componentName + componentKey;
 
   Lucid.app.page.elements[elementKey].attributes[attribute] = value;
+
+  // Check if watch exist, if exist, then call attribute's function if exists
+  Lucid.app.components[componentName].watch && Lucid.app.components[componentName].watch[attribute] && Lucid.app.components[componentName].watch[attribute].call(getThisParameter(componentName, componentKey));
+
   updateComponent(Lucid.app.page.elements[elementKey].dom.firstChild,
     Lucid.app.components[componentName].skeleton,
     componentName, componentKey);
@@ -389,10 +393,12 @@ function getThisParameter(componentName, componentKey) {
       // Save the new state
       Lucid.app.page.elements[elementKey].state = newState;
 
-      // Re-render the element
-      updateComponent(Lucid.app.page.elements[elementKey].dom.firstChild,
-        Lucid.app.components[componentName].skeleton,
-        componentName, componentKey);
+      // Re-render the element if it has a dom
+      if (Lucid.app.page.elements[elementKey].dom.firstChild) {
+        updateComponent(Lucid.app.page.elements[elementKey].dom.firstChild,
+          Lucid.app.components[componentName].skeleton,
+          componentName, componentKey);
+      }
 
       // Check if hooks exist, if exist, then call "updated" function if exists
       Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.updated && Lucid.app.components[componentName].hooks.updated.call(this);

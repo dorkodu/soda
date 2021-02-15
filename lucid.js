@@ -286,7 +286,7 @@ function getComponentAttribute(componentName, componentkey, attribute) {
 }
 
 function setComponentAttribute(componentName, componentKey, attribute, value) {
-  const elementKey = componentName + componentKey;
+  const elementKey = componentName + componentKey; ""
 
   Lucid.app.page.elements[elementKey].attributes[attribute] = value;
 
@@ -296,6 +296,9 @@ function setComponentAttribute(componentName, componentKey, attribute, value) {
   updateComponent(Lucid.app.page.elements[elementKey].dom.firstChild,
     Lucid.app.components[componentName].skeleton,
     componentName, componentKey);
+
+  // Check if hooks exist, if exist, then call "updated" function if exists
+  Lucid.app.components[componentName].hooks && Lucid.app.components[componentName].hooks.updated && Lucid.app.components[componentName].hooks.updated.call(getThisParameter(componentName, componentKey));
 }
 
 /**

@@ -6,8 +6,10 @@ export const Lucid = {
   remove: disconnectComponent,
   getAttribute: getComponentAttribute,
   setAttribute: setComponentAttribute,
+  use: use,
   /** @type {App} */
-  app: {}
+  app: {},
+  context: {}
 };
 
 /**
@@ -26,7 +28,7 @@ export const Lucid = {
  * @property {Array.<{state: object, attributes: object, dom: HTMLElement}>} elements
  * @property {Hooks} hooks
  * @property {any} payload
- * @property {any} contents
+ * @property {() => string} contents
  * @property {Skeleton} skeleton
  */
 
@@ -92,7 +94,7 @@ function createComponent(name, properties) {
  * @param {string} properties.path
  * @param {string} properties.name
  * @param {any} [properties.payload]
- * @param {Function} properties.contents
+ * @param {() => string} properties.contents
  * @param {Hooks} [properties.hooks]
  * 
  * @returns {Page} Page
@@ -141,10 +143,23 @@ function createApp(properties) {
           Lucid.app.page.hooks && Lucid.app.page.hooks.connected && Lucid.app.page.hooks.connected();
           break;
         }
+
+      // "page" reference to the context to you can access to the page
+      // within any component by calling this.context.page
+      Lucid.context.page = Lucid.app.page;
     }
   };
 
   return Lucid.app;
+}
+
+/**
+ * 
+ * @param {string} key 
+ * @param {any} value 
+ */
+function use(key, value) {
+  Lucid.context[key] = value;
 }
 
 /**
@@ -286,7 +301,7 @@ function getComponentAttribute(componentName, componentkey, attribute) {
 }
 
 function setComponentAttribute(componentName, componentKey, attribute, value) {
-  const elementKey = componentName + componentKey; ""
+  const elementKey = componentName + componentKey;
 
   Lucid.app.page.elements[elementKey].attributes[attribute] = value;
 
@@ -386,12 +401,14 @@ function createSkeleton(child, componentName) {
  */
 function getThisParameter(componentName, componentKey) {
   const elementKey = componentName + componentKey;
+
   return {
     name: componentName,
     key: componentKey,
     dom: Lucid.app.page.elements[elementKey].dom.firstChild,
     state: Lucid.app.page.elements[elementKey].state,
     attributes: Lucid.app.page.elements[elementKey].attributes,
+    context: Lucid.context,
     setState: function (newState) {
       // Save the new state
       Lucid.app.page.elements[elementKey].state = newState;

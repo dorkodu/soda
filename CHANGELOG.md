@@ -1,6 +1,6 @@
 ### 0.2.1 (January 24, 2021) 
 ---
-- Fix rendering bugs ([@bahkr](https://github.com/bahkr) in [#1](https://github.com/bahkr/lucid/issues/1) and [#2](https://github.com/bahkr/lucid/issues/2))
+- Fix rendering bugs ([@bahkr](https://github.com/berkcambaz) in [#1](https://github.com/dorkodu/lucid/issues/1) and [#2](https://github.com/dorkodu/lucid/issues/2))
 
 ### 0.2.0 (January 20, 2021) 
 ---

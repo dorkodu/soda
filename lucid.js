@@ -130,9 +130,10 @@ function createApp(properties) {
       elem.innerHTML = this.page.contents();
 
       // Create the skeleton out of the first element node
-      for (let i = 0; i < elem.childNodes.length; ++i)
-        if (elem.childNodes[i].nodeType === Node.ELEMENT_NODE) {
-          this.page.skeleton = createSkeleton(elem.childNodes[i]);
+      const childNodes = Array.from(elem.childNodes);
+      for (let i = 0; i < childNodes.length; ++i)
+        if (childNodes[i].nodeType === Node.ELEMENT_NODE) {
+          this.page.skeleton = createSkeleton(childNodes[i]);
 
           // Check if hooks exist, if exist, then call "created" function if exists
           Lucid.app.page.hooks && Lucid.app.page.hooks.created && Lucid.app.page.hooks.created();
@@ -181,9 +182,10 @@ function renderComponent(dom, componentName, componentKey, attributes, hasOwnCon
     elem.innerHTML = elemHTML.replace("src=", "srcName=");
 
     // Create the skeleton out of the first element node
-    for (let i = 0; i < elem.childNodes.length; ++i)
-      if (elem.childNodes[i].nodeType === Node.ELEMENT_NODE) {
-        Lucid.app.components[componentName].skeleton = createSkeleton(elem.childNodes[i], componentName);
+    const childNodes = Array.from(elem.childNodes);
+    for (let i = 0; i < childNodes.length; ++i)
+      if (childNodes[i].nodeType === Node.ELEMENT_NODE) {
+        Lucid.app.components[componentName].skeleton = createSkeleton(childNodes[i], componentName);
         break;
       }
   }
@@ -291,8 +293,9 @@ function updateComponent(dom, skeleton, componentName, componentKey) {
     }
   }
 
-  for (let i = 0; i < dom.childNodes.length; ++i) {
-    updateComponent(dom.childNodes[i], skeleton.children[i], componentName, componentKey);
+  const childNodes = Array.from(dom.childNodes);
+  for (let i = 0; i < childNodes.length; ++i) {
+    updateComponent(childNodes[i], skeleton.children[i], componentName, componentKey);
   }
 }
 
@@ -382,8 +385,9 @@ function createSkeleton(child, componentName) {
     }
   }
 
-  for (let i = 0; i < child.childNodes.length; ++i) {
-    const childSkeleton = createSkeleton(child.childNodes[i], componentName);
+  const childNodes = Array.from(child.childNodes);
+  for (let i = 0; i < childNodes.length; ++i) {
+    const childSkeleton = createSkeleton(childNodes[i], componentName);
 
     if (childSkeleton)
       skeleton.children.push(childSkeleton);

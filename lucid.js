@@ -129,6 +129,10 @@ function createApp(properties) {
       const elem = document.createElement("div");
       elem.innerHTML = this.page.contents();
 
+      // "page" reference to the context to you can access to the page
+      // within any component by calling this.context.page
+      Lucid.context.page = Lucid.app.page;
+
       // Create the skeleton out of the first element node
       const childNodes = Array.from(elem.childNodes);
       for (let i = 0; i < childNodes.length; ++i)
@@ -144,10 +148,6 @@ function createApp(properties) {
           Lucid.app.page.hooks && Lucid.app.page.hooks.connected && Lucid.app.page.hooks.connected();
           break;
         }
-
-      // "page" reference to the context to you can access to the page
-      // within any component by calling this.context.page
-      Lucid.context.page = Lucid.app.page;
     }
   };
 

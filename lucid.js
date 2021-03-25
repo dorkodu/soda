@@ -1,47 +1,35 @@
 export const Lucid = {
   createComponent: createComponent,
-  createPage: createPage,
   createApp: createApp
 };
 
 const _Lucid = {
   connectComponent: connectComponent,
   updateComponent: updateComponent,
-  renderPage: renderPage,
-  connectPage: connectPage,
   createSkeleton: createSkeleton,
   getThisParameter: getThisParameter,
   convertTextVariables: convertTextVariables,
+  /** @type {Object.<string, Component>} */
+  components: {},
+  /** @type {{state: object, attributes: object, dom: HTMLElement}} */
+  elements: {},
   app: {
-    use: use,
     getAttribute: getComponentAttribute,
     setAttribute: setComponentAttribute,
     render: renderComponent,
     remove: disconnectComponent,
-    run: run,
+    use: use,
     context: {},
     /** @type {HTMLElement} */
     container: null,
   }
 };
 
-/** 
- * @typedef {object} Page
- * 
- * @property {string} path
- * @property {string} name
- * @property {Array.<{state: object, attributes: object, dom: HTMLElement}>} elements
- * @property {Hooks} hooks
- * @property {any} payload
- * @property {() => string} contents
- * @property {Skeleton} skeleton
- */
-
 /**
  * @typedef {object} Component
  * 
  * @property {object} state 
- * @property {() = > string} render 
+ * @property {() => string} render 
  * @property {Object.<string, Function>} methods 
  * @property {Hooks} hooks
  * @property {object} attributes 
@@ -80,8 +68,8 @@ const _Lucid = {
  * 
  * @returns {Component} Component
  */
-function createComponent(properties) {
-  return {
+function createComponent(name, properties) {
+  const component = {
     state: properties.state,
     methods: properties.methods,
     render: properties.render,
@@ -89,56 +77,28 @@ function createComponent(properties) {
     attributes: properties.attributes,
     watch: properties.watch
   };
-}
 
-/**
- * Returns the page that's created from given properties.
- * @param {object} properties
- * @param {string} properties.path
- * @param {any} [properties.payload]
- * @param {() => string} properties.contents
- * @param {Hooks} [properties.hooks]
- * 
- * @returns {Page} Page
- */
-function createPage(properties) {
-  return {
-    path: properties.path,
-    name: properties.path.substr(1),
-    elements: {},
-    payload: properties.payload,
-    contents: properties.contents,
-    hooks: properties.hooks
-  };
+  _Lucid.components[name] = component;
 }
 
 /**
  * Returns the app that's created from given properties.
  * @param {object} properties 
- * @param {Page} properties.page 
- * @param {Array} properties.extensions
- * @param {Object.<string, Component>} [properties.components]
+ * @param {string} properties.containerId
+ * @param {object[]} [properties.extensions]
  */
 function createApp(properties) {
-  _Lucid.app.page = properties.page;
-  _Lucid.app.components = properties.components;
+  // Get the container
+  _Lucid.app.container = document.getElementById(properties.containerId);
 
   // Link lucid to extensions
-  properties.extensions.forEach((ext) => {
-    ext.linkLucid(_Lucid);
-  });
+  if (properties.extensions) {
+    properties.extensions.forEach((ext) => {
+      ext.linkLucid(_Lucid);
+    });
+  }
 
   return _Lucid.app;
-}
-
-/**
- * 
- * @param {string} containerId 
- */
-function run(containerId) {
-  // Get the container
-  _Lucid.app.container = document.getElementById(containerId);
-  renderPage();
 }
 
 /**
@@ -160,19 +120,19 @@ function use(key, value) {
  */
 function renderComponent(dom, componentName, componentKey, attributes, hasOwnContainer) {
   // If the component that is going to be rendered does not have a skeleton yet, create a skeleton for it
-  if (!_Lucid.app.components[componentName].skeleton) {
+  if (!_Lucid.components[componentName].skeleton) {
     const elem = document.createElement("div");
 
     // Fix bug with src, if src is set, it will request the src and
     // will fail if it's a string variable (e.g. {{state.photoPath}})
-    let elemHTML = _Lucid.app.components[componentName].render();
+    let elemHTML = _Lucid.components[componentName].render();
     elem.innerHTML = elemHTML.replace("src=", "srcName=");
 
     // Create the skeleton out of the first element node
     const childNodes = Array.from(elem.childNodes);
     for (let i = 0; i < childNodes.length; ++i)
       if (childNodes[i].nodeType === Node.ELEMENT_NODE) {
-        _Lucid.app.components[componentName].skeleton = createSkeleton(childNodes[i], componentName);
+        _Lucid.components[componentName].skeleton = createSkeleton(childNodes[i], componentName);
         break;
       }
   }
@@ -187,20 +147,20 @@ function renderComponent(dom, componentName, componentKey, attributes, hasOwnCon
   }
 
   // Save component's state and DOM into lucid for later use
-  _Lucid.app.page.elements[componentName + componentKey] = {
-    state: _Lucid.app.components[componentName].state,
+  _Lucid.elements[componentName + componentKey] = {
+    state: _Lucid.components[componentName].state,
     attributes: attributes,
     dom: elem
   };
 
   // Check if hooks exist, if exist, then call "created" function if exists
-  _Lucid.app.components[componentName].hooks && _Lucid.app.components[componentName].hooks.created && _Lucid.app.components[componentName].hooks.created.call(getThisParameter(componentName, componentKey));
+  _Lucid.components[componentName].hooks && _Lucid.components[componentName].hooks.created && _Lucid.components[componentName].hooks.created.call(getThisParameter(componentName, componentKey));
 
-  connectComponent(elem, _Lucid.app.components[componentName].skeleton, componentName, componentKey);
+  connectComponent(elem, _Lucid.components[componentName].skeleton, componentName, componentKey);
   if (!hasOwnContainer) dom.appendChild(elem);
 
   // Check if hooks exist, if exist, then call "connected" function if exists
-  _Lucid.app.components[componentName].hooks && _Lucid.app.components[componentName].hooks.connected && _Lucid.app.components[componentName].hooks.connected.call(getThisParameter(componentName, componentKey));
+  _Lucid.components[componentName].hooks && _Lucid.components[componentName].hooks.connected && _Lucid.components[componentName].hooks.connected.call(getThisParameter(componentName, componentKey));
 }
 
 /**
@@ -248,15 +208,15 @@ function connectComponent(dom, skeleton, componentName, componentKey) {
  */
 function disconnectComponent(componentName, componentKey) {
   const elementKey = componentName + componentKey;
-  const dom = _Lucid.app.page.elements[elementKey].dom;
+  const dom = _Lucid.elements[elementKey].dom;
 
   // Remove the component from the dom, then call "disconnected" hook
   dom.parentNode.removeChild(dom);
 
   // Check if hooks exist, if exist, then call "disconnected" function if exists
-  _Lucid.app.components[componentName].hooks && _Lucid.app.components[componentName].hooks.disconnected && _Lucid.app.components[componentName].hooks.disconnected.call(getThisParameter(componentName, componentKey));
+  _Lucid.components[componentName].hooks && _Lucid.components[componentName].hooks.disconnected && _Lucid.components[componentName].hooks.disconnected.call(getThisParameter(componentName, componentKey));
 
-  _Lucid.app.page.elements[elementKey] = undefined;
+  _Lucid.elements[elementKey] = undefined;
 }
 
 /**
@@ -294,7 +254,7 @@ function updateComponent(dom, skeleton, componentName, componentKey) {
  * @returns 
  */
 function getComponentAttribute(componentName, componentkey, attribute) {
-  return _Lucid.app.page.elements[componentName + componentkey].attributes[attribute];
+  return _Lucid.elements[componentName + componentkey].attributes[attribute];
 }
 
 /**
@@ -307,77 +267,17 @@ function getComponentAttribute(componentName, componentkey, attribute) {
 function setComponentAttribute(componentName, componentKey, attribute, value) {
   const elementKey = componentName + componentKey;
 
-  _Lucid.app.page.elements[elementKey].attributes[attribute] = value;
+  _Lucid.elements[elementKey].attributes[attribute] = value;
 
   // Check if watch exist, if exist, then call attribute's function if exists
-  _Lucid.app.components[componentName].watch && _Lucid.app.components[componentName].watch[attribute] && _Lucid.app.components[componentName].watch[attribute].call(getThisParameter(componentName, componentKey));
+  _Lucid.components[componentName].watch && _Lucid.components[componentName].watch[attribute] && _Lucid.components[componentName].watch[attribute].call(getThisParameter(componentName, componentKey));
 
-  updateComponent(_Lucid.app.page.elements[elementKey].dom.firstChild,
-    _Lucid.app.components[componentName].skeleton,
+  updateComponent(_Lucid.elements[elementKey].dom.firstChild,
+    _Lucid.components[componentName].skeleton,
     componentName, componentKey);
 
   // Check if hooks exist, if exist, then call "updated" function if exists
-  _Lucid.app.components[componentName].hooks && _Lucid.app.components[componentName].hooks.updated && _Lucid.app.components[componentName].hooks.updated.call(getThisParameter(componentName, componentKey));
-}
-
-function renderPage() {
-  // If page doesn't have a skeleton already, create it's skeleton
-  if (!_Lucid.app.page.skeleton) {
-    const elem = document.createElement("div");
-    elem.innerHTML = _Lucid.app.page.contents();
-
-    // Create the skeleton out of the first element node
-    const childNodes = Array.from(elem.childNodes);
-    for (let i = 0; i < childNodes.length; ++i)
-      if (childNodes[i].nodeType === Node.ELEMENT_NODE) {
-        _Lucid.app.page.skeleton = createSkeleton(childNodes[i]);
-
-        // Check if hooks exist, if exist, then call "created" function if exists
-        _Lucid.app.page.hooks && _Lucid.app.page.hooks.created && _Lucid.app.page.hooks.created();
-        break;
-      }
-  }
-
-  // Remove all elements inside the container before inserting new content into it
-  while (_Lucid.app.container.lastChild)
-    _Lucid.app.container.removeChild(_Lucid.app.container.lastChild);
-
-  connectPage(_Lucid.app.container, _Lucid.app.page.skeleton);
-
-  // Check if hooks exist, if exist, then call "connected" function if exists
-  _Lucid.app.page.hooks && _Lucid.app.page.hooks.connected && _Lucid.app.page.hooks.connected();
-}
-
-/**
- * 
- * @param {HTMLElement} dom 
- * @param {Skeleton} skeleton 
- */
-function connectPage(dom, skeleton) {
-  // If skeleton is a string, it's a text node that is the only child
-  if (typeof skeleton === "string") {
-    const textNode = document.createTextNode(skeleton);
-    dom.appendChild(textNode);
-    return;
-  }
-
-  const elem = document.createElement(skeleton.tag);
-
-  for (const key in skeleton.attrs)
-    elem.setAttribute(key, skeleton.attrs[key]);
-
-  // Get 2 lucid attributes, "lucid-component" and "lucid-key"
-  const componentName = elem.getAttribute("lucid-component");
-  const componentKey = elem.getAttribute("lucid-key");
-
-  // If component name and key are present in the node, it's a lucid component
-  if (componentName || componentKey)
-    renderComponent(elem, componentName, componentKey, null, true);
-
-  for (let i = 0; i < skeleton.children.length; ++i)
-    connectPage(elem, skeleton.children[i]);
-
-  dom.appendChild(elem);
+  _Lucid.components[componentName].hooks && _Lucid.components[componentName].hooks.updated && _Lucid.components[componentName].hooks.updated.call(getThisParameter(componentName, componentKey));
 }
 
 /**
@@ -438,22 +338,22 @@ function getThisParameter(componentName, componentKey) {
   return {
     name: componentName,
     key: componentKey,
-    dom: _Lucid.app.page.elements[elementKey].dom.firstChild,
-    state: _Lucid.app.page.elements[elementKey].state,
-    attributes: _Lucid.app.page.elements[elementKey].attributes,
+    dom: _Lucid.elements[elementKey].dom.firstChild,
+    state: _Lucid.elements[elementKey].state,
+    attributes: _Lucid.elements[elementKey].attributes,
     setState: function (newState) {
       // Save the new state
-      _Lucid.app.page.elements[elementKey].state = newState;
+      _Lucid.elements[elementKey].state = newState;
 
       // Re-render the element if it has a dom
-      if (_Lucid.app.page.elements[elementKey].dom.firstChild) {
-        updateComponent(_Lucid.app.page.elements[elementKey].dom.firstChild,
-          _Lucid.app.components[componentName].skeleton,
+      if (_Lucid.elements[elementKey].dom.firstChild) {
+        updateComponent(_Lucid.elements[elementKey].dom.firstChild,
+          _Lucid.components[componentName].skeleton,
           componentName, componentKey);
       }
 
       // Check if hooks exist, if exist, then call "updated" function if exists
-      _Lucid.app.components[componentName].hooks && _Lucid.app.components[componentName].hooks.updated && _Lucid.app.components[componentName].hooks.updated.call(this);
+      _Lucid.components[componentName].hooks && _Lucid.components[componentName].hooks.updated && _Lucid.components[componentName].hooks.updated.call(this);
     }
   };
 }
@@ -478,7 +378,7 @@ function convertTextVariables(text, componentName, componentKey) {
     const variable = text.substring(startIndex + 2, endIndex);
     const properties = variable.split(".");
 
-    let tempObj = _Lucid.app.components[componentName];
+    let tempObj = _Lucid.components[componentName];
     for (let i = 0; i < properties.length; ++i)
       tempObj = tempObj[properties[i]];
 
@@ -490,7 +390,7 @@ function convertTextVariables(text, componentName, componentKey) {
       const variable = text.substring(startIndex + 2, endIndex);
       const properties = variable.split(".");
 
-      let tempObj = _Lucid.app.page.elements[elementKey];
+      let tempObj = _Lucid.elements[elementKey];
       for (let i = 0; i < properties.length; ++i)
         tempObj = tempObj[properties[i]];
 

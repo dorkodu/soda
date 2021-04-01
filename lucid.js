@@ -28,12 +28,12 @@ const _Lucid = {
 /**
  * @typedef {object} Component
  * 
+ * @property {string} name
  * @property {object} state 
  * @property {() => string} render 
  * @property {Object.<string, Function>} methods 
  * @property {Hooks} hooks
  * @property {object} attributes 
- * @property {string} key
  * @property {Object.<string, Function>} watch 
  * @property {Skeleton} skeleton
  */
@@ -57,28 +57,30 @@ const _Lucid = {
 
 /**
  * Returns the component that's created from given name and properties.
- * @param {string} name HTML tag name 
+ * @param {string} name 
  * @param {object} properties
  * @param {object} [properties.state] 
+ * @param {object} [properties.attributes]
  * @param {Object.<string, Function>} [properties.methods] 
  * @param {() => string} properties.render
  * @param {Hooks} [properties.hooks]
- * @param {object} [properties.attributes]
  * @param {Object.<string, Function>} [properties.watch]
  * 
  * @returns {Component} Component
  */
 function createComponent(name, properties) {
-  const component = {
+  _Lucid.components[name] = {
+    name: name,
     state: properties.state,
     methods: properties.methods,
     render: properties.render,
     hooks: properties.hooks,
     attributes: properties.attributes,
-    watch: properties.watch
+    watch: properties.watch,
+    skeleton: null
   };
 
-  _Lucid.components[name] = component;
+  return _Lucid.components[name];
 }
 
 /**
@@ -242,7 +244,10 @@ function updateComponent(dom, skeleton, componentName, componentKey) {
 
   const childNodes = Array.from(dom.childNodes);
   for (let i = 0; i < childNodes.length; ++i) {
-    updateComponent(childNodes[i], skeleton.children[i], componentName, componentKey);
+    // Check also if there isa skeleton for the dom child
+    if (skeleton.children[i]) {
+      updateComponent(childNodes[i], skeleton.children[i], componentName, componentKey);
+    }
   }
 }
 

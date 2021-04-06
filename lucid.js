@@ -288,7 +288,7 @@ function setComponentAttribute(componentName, componentKey, attribute, value) {
 /**
  * 
  * @param {HTMLElement} child 
- * @param {string} [componentName]  If componentName is not provided, it creates a skeleton out of a page, otherwise out of a component.
+ * @param {string} componentName
  * 
  * @returns {Skeleton} Skeleton
  */

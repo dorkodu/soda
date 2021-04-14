@@ -218,7 +218,7 @@ function disconnectComponent(componentName, componentKey) {
   // Check if hooks exist, if exist, then call "disconnected" function if exists
   _Lucid.components[componentName].hooks && _Lucid.components[componentName].hooks.disconnected && _Lucid.components[componentName].hooks.disconnected.call(getThisParameter(componentName, componentKey));
 
-  _Lucid.elements[elementKey] = undefined;
+  delete _Lucid.elements[elementKey];
 }
 
 /**

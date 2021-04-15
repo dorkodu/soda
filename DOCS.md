@@ -23,9 +23,9 @@ const Counter = Lucid.createComponent("Counter", {
     },
     render: function() {
         return `
-			<div>
-				<h1 onclick="{{methods.increment}}">{{state.count}}</h1>
-			</div>
+		<div>
+			<h1 onclick="{{methods.increment}}">{{state.count}}</h1>
+		</div>
 		`;
     }
 });

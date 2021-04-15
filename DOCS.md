@@ -23,10 +23,10 @@ const Counter = Lucid.createComponent("Counter", {
     },
     render: function() {
         return `
-	<div>
-	  <h1 onclick="{{methods.increment}}">{{state.count}}</h1>
-	</div>
-	`;
+			<div>
+				<h1 onclick="{{methods.increment}}">{{state.count}}</h1>
+			</div>
+		`;
     }
 });
 
@@ -44,3 +44,8 @@ To help make you get comfortable with Lucid, let's look at the example above. Wh
 `methods` are where we store the functions, that we want to use with our component. In the example, we have `increment` function that sets the state to `count + 1`.
 
 `render` is where we define the look of our component. It's written as a string template, but then Lucid translates it into a very efficient data-structure called `skeleton`. In the string template, we defined a `h1` inside a `div`. If you look closely to `h1`, you'll notice that it has an `onclick` event which is equal to `{{methods.increment}}` which means, each time you click on to that `h1`, Lucid is going to call increment method that we have defined. Lastly, the text content of our `h1` element has `{{state.count}}`. In Lucid, we call them `string variables`. Lucid will change `{{state.count}}` with the count of the state, when rendering. But don't worry, it will not show `{{state.count}}` as the text content even for a millisecond.
+
+Now, let's look at how do we create an app and render our component. We call `Lucid.createApp` and assign it to a variable called `app`. This function has only one parameter, in which we specify the properties of our app. In our case, we set `containerId` to `app` which means Lucid is going to find the HTML element that has `app` as it's `id`, and set it as the container of our app.
+
+Lastly, we call `app.render` to render our component. First parameter specifies **where to put the component**, second specifies **what component to put**, and the last one specifies **which key to put it with**.
+

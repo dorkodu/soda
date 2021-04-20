@@ -4,11 +4,6 @@ export const Lucid = {
 };
 
 const _Lucid = {
-  connectComponent: connectComponent,
-  updateComponent: updateComponent,
-  createSkeleton: createSkeleton,
-  getThisParameter: getThisParameter,
-  convertTextVariables: convertTextVariables,
   /** @type {Object.<string, Component>} */
   components: {},
   /** @type {{state: object, attributes: object, dom: HTMLElement}} */
@@ -84,21 +79,13 @@ function createComponent(name, properties) {
 }
 
 /**
- * Returns the app that's created from given properties.
- * @param {object} properties 
- * @param {string} properties.containerId
- * @param {object[]} [properties.extensions]
+ * Returns the app
+ * @param {string} containerId 
+ * @returns 
  */
-function createApp(properties) {
+function createApp(containerId) {
   // Get the container
-  _Lucid.app.container = document.getElementById(properties.containerId);
-
-  // Link lucid to extensions
-  if (properties.extensions) {
-    properties.extensions.forEach((ext) => {
-      ext.linkLucid(_Lucid);
-    });
-  }
+  _Lucid.app.container = document.getElementById(containerId);
 
   return _Lucid.app;
 }
@@ -346,6 +333,7 @@ function getThisParameter(componentName, componentKey) {
     dom: _Lucid.elements[elementKey].dom.firstChild,
     state: _Lucid.elements[elementKey].state,
     attributes: _Lucid.elements[elementKey].attributes,
+    methods: _Lucid.components[componentName].methods,
     setState: function (newState) {
       // Save the new state
       _Lucid.elements[elementKey].state = newState;

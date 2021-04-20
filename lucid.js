@@ -184,6 +184,14 @@ function connectComponent(dom, skeleton, componentName, componentKey) {
     }
   }
 
+  // Get 2 lucid attributes, "lucid-component" and "lucid-key"
+  const lucidComponent = elem.getAttribute("lucid-component");
+  const lucidKey = elem.getAttribute("lucid-key");
+
+  // If component name and key are present in the node, it's a lucid component
+  if (lucidComponent || lucidKey)
+    renderComponent(elem, lucidComponent, lucidKey, null, true);
+
   for (let i = 0; i < skeleton.children.length; ++i)
     connectComponent(elem, skeleton.children[i], componentName, componentKey);
 

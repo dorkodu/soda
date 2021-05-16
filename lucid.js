@@ -29,7 +29,7 @@ const _Lucid = {
  * @property {Object.<string, Function>} methods 
  * @property {Hooks} hooks
  * @property {object} attributes 
- * @property {Object.<string, Function>} watch 
+ * @property {Object.<string, (oldValue: any, newValue: any) => undefined>} watch 
  * @property {Skeleton} skeleton
  */
 
@@ -59,11 +59,15 @@ const _Lucid = {
  * @param {Object.<string, Function>} [properties.methods] 
  * @param {() => string} properties.render
  * @param {Hooks} [properties.hooks]
- * @param {Object.<string, Function>} [properties.watch]
+ * @param {Object.<string, (oldValue: any, newValue: any) => undefined>} [properties.watch]
  * 
  * @returns {Component} Component
  */
 function createComponent(name, properties) {
+  // Return if component is somehow already been created
+  if (_Lucid.components[name])
+    return;
+
   _Lucid.components[name] = {
     name: name,
     state: properties.state,
@@ -138,7 +142,7 @@ function renderComponent(dom, componentName, componentKey, attributes, hasOwnCon
   // Save component's state and DOM into lucid for later use
   _Lucid.elements[componentName + componentKey] = {
     state: _Lucid.components[componentName].state,
-    attributes: attributes,
+    attributes: attributes ? attributes : {},
     dom: elem
   };
 
@@ -267,10 +271,11 @@ function getComponentAttribute(componentName, componentkey, attribute) {
 function setComponentAttribute(componentName, componentKey, attribute, value) {
   const elementKey = componentName + componentKey;
 
+  const oldValue = _Lucid.elements[elementKey].attributes[attribute];
   _Lucid.elements[elementKey].attributes[attribute] = value;
 
   // Check if watch exist, if exist, then call attribute's function if exists
-  _Lucid.components[componentName].watch && _Lucid.components[componentName].watch[attribute] && _Lucid.components[componentName].watch[attribute].call(getThisParameter(componentName, componentKey));
+  _Lucid.components[componentName].watch && _Lucid.components[componentName].watch[attribute] && _Lucid.components[componentName].watch[attribute].call(getThisParameter(componentName, componentKey), oldValue, value);
 
   updateComponent(_Lucid.elements[elementKey].dom.firstChild,
     _Lucid.components[componentName].skeleton,

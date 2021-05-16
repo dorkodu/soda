@@ -175,8 +175,8 @@ function connectComponent(dom, skeleton, componentName, componentKey) {
 
   for (const key in skeleton.attrs) {
     if (key.startsWith("on")) {
-      elem.addEventListener(key.substr(2), function () {
-        skeleton.attrs[key].call(getThisParameter(componentName, componentKey));
+      elem.addEventListener(key.substr(2), function (ev) {
+        skeleton.attrs[key].call(getThisParameter(componentName, componentKey), ev);
       });
     }
     else {

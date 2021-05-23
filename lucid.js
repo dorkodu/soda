@@ -6,7 +6,7 @@ export const Lucid = {
 const _Lucid = {
   app: {
     /** @type {HTMLElement} */
-    dom: null,
+    container: null,
     render: renderComponent,
     remove: removeComponent,
     context: {}
@@ -53,7 +53,7 @@ const _Lucid = {
  * @param {string} containerId 
  */
 function app(containerId) {
-  _Lucid.app.dom = document.getElementById(containerId);
+  _Lucid.app.container = document.getElementById(containerId);
   return _Lucid.app;
 }
 
@@ -96,12 +96,13 @@ function component(props) {
 
 /**
  * 
- * @param {any} element 
+ * @param {HTMLElement} dom 
  * @param {Component} component
  * @param {number} key 
  * @param {object} [attributes] 
+ * @param {{first: boolean, last: boolean, index: number}} [settings] 
  */
-function renderComponent(element, component, key, attributes) {
+function renderComponent(dom, component, key, attributes, settings) {
   // Check if component has it's skeleton created, if not, create it's skeleton
   if (_Lucid.components[component.id].props.skeleton === null) {
     const elem = document.createElement("div");
@@ -122,13 +123,22 @@ function renderComponent(element, component, key, attributes) {
   })
   delete _Lucid.elements[component.id][key].props;
 
-  if (_Lucid.elements[element.id])
-    _Lucid.elements[element.id][element.key].children.push({ id: component.id, key: key });
+  // Find the parent of the current component that's being rendered
+  let parentNode = dom;
+  while (parentNode) {
+    const parentId = dom.getAttribute("lucid-id");
+    const parentKey = dom.getAttribute("lucid-key");
+    if (parentId && parentKey) {
+      _Lucid.elements[parentId][parentKey].children.push({ id: component.id, key: key });
+      break;
+    }
+    parentNode = parentNode.parentElement;
+  }
 
   // Call "created" hook if exists
   _Lucid.elements[component.id][key].created && _Lucid.elements[component.id][key].created()
 
-  const elem = connectComponent(element.dom, _Lucid.components[component.id].props.skeleton, component.id, key);
+  const elem = connectComponent(dom, _Lucid.components[component.id].props.skeleton, component.id, key);
 
   // Set 2 lucid attributes, "lucid-id" and "lucid-key"
   elem.setAttribute("lucid-id", component.id);
@@ -141,8 +151,6 @@ function renderComponent(element, component, key, attributes) {
 
   // Call "connected" hook if exists
   _Lucid.elements[component.id][key].connected && _Lucid.elements[component.id][key].connected()
-
-  console.log(_Lucid.elements);
 }
 
 /**

@@ -6,9 +6,10 @@ export const Lucid = {
 const _Lucid = {
   app: {
     /** @type {HTMLElement} */
-    container: null,
+    dom: null,
     render: renderComponent,
-    remove: removeComponent
+    remove: removeComponent,
+    context: {}
   },
   /** @type {Object<number, Component>} */
   components: {},
@@ -52,7 +53,7 @@ const _Lucid = {
  * @param {string} containerId 
  */
 function app(containerId) {
-  _Lucid.app.container = document.getElementById(containerId);
+  _Lucid.app.dom = document.getElementById(containerId);
   return _Lucid.app;
 }
 
@@ -95,12 +96,12 @@ function component(props) {
 
 /**
  * 
- * @param {HTMLElement} dom 
+ * @param {any} element 
  * @param {Component} component
  * @param {number} key 
  * @param {object} [attributes] 
  */
-function renderComponent(dom, component, key, attributes) {
+function renderComponent(element, component, key, attributes) {
   // Check if component has it's skeleton created, if not, create it's skeleton
   if (_Lucid.components[component.id].props.skeleton === null) {
     const elem = document.createElement("div");
@@ -110,6 +111,7 @@ function renderComponent(dom, component, key, attributes) {
 
   _Lucid.elements[component.id][key] = Object.assign({}, _Lucid.components[component.id], {
     key: key,
+    children: [],
     dom: null,
     update: function () {
       updateComponent(this.dom, _Lucid.components[this.id].props.skeleton, this.id, this.key);
@@ -120,20 +122,27 @@ function renderComponent(dom, component, key, attributes) {
   })
   delete _Lucid.elements[component.id][key].props;
 
+  if (_Lucid.elements[element.id])
+    _Lucid.elements[element.id][element.key].children.push({ id: component.id, key: key });
+
   // Call "created" hook if exists
   _Lucid.elements[component.id][key].created && _Lucid.elements[component.id][key].created()
 
-  const elem = connectComponent(dom, _Lucid.components[component.id].props.skeleton, component.id, key);
+  const elem = connectComponent(element.dom, _Lucid.components[component.id].props.skeleton, component.id, key);
 
   // Set 2 lucid attributes, "lucid-id" and "lucid-key"
   elem.setAttribute("lucid-id", component.id);
   elem.setAttribute("lucid-key", key);
 
   // Set the dom of the element, since it has been connected
+  // and over-write to default attributes if provided
   _Lucid.elements[component.id][key].dom = elem;
+  if (attributes) _Lucid.elements[component.id][key].attributes = attributes;
 
   // Call "connected" hook if exists
   _Lucid.elements[component.id][key].connected && _Lucid.elements[component.id][key].connected()
+
+  console.log(_Lucid.elements);
 }
 
 /**
@@ -217,11 +226,19 @@ function removeComponent(id, key) {
   // Remove the component from the DOM
   dom.parentNode.removeChild(dom);
 
+  const childrenCount = _Lucid.elements[id][key].children.length;
+  for (let i = 0; i < childrenCount; ++i) {
+    const child = _Lucid.elements[id][key].children[i];
+    removeComponent(child.id, child.key);
+  }
+
   // Call "disconnected" hook if exists
   _Lucid.elements[id][key].disconnected && _Lucid.elements[id][key].disconnected();
 
   // Delete it from the elements
   delete _Lucid.elements[id][key];
+
+  console.log(_Lucid.elements);
 }
 
 /**

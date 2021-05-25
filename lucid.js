@@ -9,7 +9,9 @@ const _Lucid = {
     container: null,
     render: renderComponent,
     remove: removeComponent,
-    context: {}
+    context: {},
+    getAttribute: getAttribute,
+    setAttribute: setAttribute
   },
   /** @type {Object<number, Component>} */
   components: {},
@@ -135,19 +137,38 @@ function renderComponent(dom, component, key, attributes, settings) {
     parentNode = parentNode.parentElement;
   }
 
+  // Over-write to default attributes if provided
+  if (attributes) _Lucid.elements[component.id][key].attributes = attributes;
+
   // Call "created" hook if exists
   _Lucid.elements[component.id][key].created && _Lucid.elements[component.id][key].created()
 
-  const elem = connectComponent(dom, _Lucid.components[component.id].props.skeleton, component.id, key);
+  let elem = document.createElement("div");
+  connectComponent(elem, _Lucid.components[component.id].props.skeleton, component.id, key);
+  elem = elem.firstChild;
+
+  // Render the component to the appropriate position
+  if (!settings) {
+    dom.appendChild(elem);
+  } else {
+    if (settings.first !== undefined) {
+      if (dom.firstChild)
+        dom.insertBefore(elem, dom.firstChild);
+      else
+        dom.appendChild(elem);
+    } else if (settings.index) {
+      dom.insertBefore(elem, dom.children[settings.index])
+    }
+    else
+      dom.appendChild(elem)
+  }
 
   // Set 2 lucid attributes, "lucid-id" and "lucid-key"
   elem.setAttribute("lucid-id", component.id);
   elem.setAttribute("lucid-key", key);
 
   // Set the dom of the element, since it has been connected
-  // and over-write to default attributes if provided
   _Lucid.elements[component.id][key].dom = elem;
-  if (attributes) _Lucid.elements[component.id][key].attributes = attributes;
 
   // Call "connected" hook if exists
   _Lucid.elements[component.id][key].connected && _Lucid.elements[component.id][key].connected()
@@ -194,8 +215,6 @@ function connectComponent(dom, skeleton, componentId, componentKey) {
     renderComponent(newElem, { id: lucidId }, lucidKey);
     dom.replaceChild(newElem.firstChild, elem);
   }
-
-  return elem;
 }
 
 function updateComponent(dom, skeleton, componentId, componentKey) {
@@ -245,8 +264,18 @@ function removeComponent(id, key) {
 
   // Delete it from the elements
   delete _Lucid.elements[id][key];
+}
 
-  console.log(_Lucid.elements);
+function getAttribute(id, key, attribute) {
+  return _Lucid.elements[id][key].attributes[attribute];
+}
+
+function setAttribute(id, key, attribute, value) {
+  const oldValue = _Lucid.elements[id][key].attributes[attribute];
+  _Lucid.elements[id][key].attributes[attribute] = value;
+
+  // Call watch function of the attribute if exists
+  _Lucid.elements[id][key][attribute] && _Lucid.elements[id][key][attribute](oldValue, value);
 }
 
 /**

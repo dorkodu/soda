@@ -1,18 +1,13 @@
 export const Lucid = {
-  app: app,
-  component: component
+  component: component,
+  render: renderComponent,
+  remove: removeComponent,
+  getAttribute: getAttribute,
+  setAttribute: setAttribute,
+  context: {},
 }
 
 const _Lucid = {
-  app: {
-    /** @type {HTMLElement} */
-    container: null,
-    render: renderComponent,
-    remove: removeComponent,
-    context: {},
-    getAttribute: getAttribute,
-    setAttribute: setAttribute
-  },
   /** @type {Object<number, Component>} */
   components: {},
   componentId: 0,
@@ -49,15 +44,6 @@ const _Lucid = {
  * @property {Object.<string, string>} attrs
  * @property {Skeleton[]} children
  */
-
-/**
- * 
- * @param {string} containerId 
- */
-function app(containerId) {
-  _Lucid.app.container = document.getElementById(containerId);
-  return _Lucid.app;
-}
 
 /**
  * 

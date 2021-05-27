@@ -100,6 +100,7 @@ function renderComponent(dom, component, key, attributes, settings) {
 
   _Lucid.elements[component.id][key] = Object.assign({}, _Lucid.components[component.id], {
     key: key,
+    refs: {},
     children: [],
     dom: null,
     update: function () {
@@ -190,6 +191,11 @@ function connectComponent(dom, skeleton, componentId, componentKey) {
     connectComponent(elem, skeleton.children[i], componentId, componentKey);
 
   dom.appendChild(elem);
+
+  // Get "lucid-ref" attribute, if exists, set the ref of the dom on the element
+  const ref = elem.getAttribute("lucid-ref");
+  if (ref)
+    _Lucid.elements[componentId][componentKey].refs[ref] = elem;
 
   // Get 2 lucid attributes, "lucid-id" and "lucid-key"
   const lucidId = elem.getAttribute("lucid-id");

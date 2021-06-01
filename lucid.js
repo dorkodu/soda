@@ -94,7 +94,7 @@ function renderComponent(dom, component, key, attributes, settings) {
   // Check if component has it's skeleton created, if not, create it's skeleton
   if (_Lucid.components[component.id].props.skeleton === null) {
     const elem = document.createElement("div");
-    elem.innerHTML = _Lucid.components[component.id].props.render();
+    elem.innerHTML = _Lucid.components[component.id].props.render().replace("src=", "srcName=");
     _Lucid.components[component.id].props.skeleton = createSkeleton(elem.firstElementChild);
   }
 
@@ -184,7 +184,7 @@ function connectComponent(dom, skeleton, componentId, componentKey) {
     if (key.startsWith("on"))
       elem.addEventListener(key.substr(2), (ev) => { result(ev); });
     else
-      elem.setAttribute(key, result);
+      elem.setAttribute(key.replace("srcName=", "src="), result);
   }
 
   for (let i = 0; i < skeleton.children.length; ++i)

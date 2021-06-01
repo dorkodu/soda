@@ -184,7 +184,7 @@ function connectComponent(dom, skeleton, componentId, componentKey) {
     if (key.startsWith("on"))
       elem.addEventListener(key.substr(2), (ev) => { result(ev); });
     else
-      elem.setAttribute(key.replace("srcName=", "src="), result);
+      elem.setAttribute(key.replace("srcName", "src"), result);
   }
 
   for (let i = 0; i < skeleton.children.length; ++i)

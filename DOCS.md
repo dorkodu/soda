@@ -4,6 +4,8 @@
 
 Just download our source code from [here](https://github.com/dorkodu/lucid) and put `lucid.js` into your project. Also, to use Lucid, `node.js` is not mandatory.
 
+
+
 ### Overview
 
 ------
@@ -12,40 +14,64 @@ Just download our source code from [here](https://github.com/dorkodu/lucid) and 
 ```js
 import { Lucid } from "./lucid.js";
 
-const Counter = Lucid.createComponent("Counter", {
-    state: {
-        count: 0
-    },
-    methods: {
-        increment: function() {
-            this.setState({state: this.state.count + 1})
-        }
-    },
-    render: function() {
-        return `
-            <div>
-                <h1 onclick="{{methods.increment}}">{{state.count}}</h1>
-            </div>
-        `;
+const Page = Lucid.component({
+  attributes: {
+    count: 0
+  },
+  render: function (ev) {
+    return `
+      <div>
+        <h1>Example with lucid.js</h1>
+        <div>Counter has been clicked for {{attributes.count}} times.</div>
+        <div lucid-id="${Counter.id}" lucid-key="0"></div>
+      </div>
+    `;
+  },
+  watch: {
+    count: function (oldValue, newValue) {
+      this.update();
     }
+  }
 });
 
-const app = Lucid.createApp({
-    containerId: "app"
+const Counter = Lucid.component({
+  state: {
+    count: 0
+  },
+  methods: {
+    count: function () {
+      this.state.count++;
+      Lucid.setAttribute(Page.id, 0, "count", this.state.count)
+      this.update()
+    }
+  },
+  render: function () {
+    return `<div onclick="{{methods.count}}">Count: {{state.count}}</div>`;
+  }
 });
 
-app.render(app.container, "Counter", "0");
+Lucid.render(document.getElementById("app"), Page, 0);
 ```
 
-To help make you get comfortable with Lucid, let's look at the example above. When creating component's we call `Lucid.createComponent` function with a few parameters and assign it to a variable. The first parameter is the name of the component and it will used for referencing this component. The second parameter, which is an object, contains all properties that our component has. In our example, we have only used `state`, `methods` and `render`. But there actually are a lot more.
+To help make you get comfortable with Lucid, let's look at the example above. When creating a component,         call `Lucid.component` with an object that has a few properties. Those are `attributes`, `state`, `methods`, `render`, `hooks`, and `watch` of which **only render property is mandatory**. This function returns us the component to reference it later on if needed.
 
-`state` is where we store private data of our component. In this case, we have `count`. A `state` inside a component, is used as the default `state` when a new component is rendered.
+In our first component `Page`, we have specified only `attributes`, `render` and `watch` properties. Let's now look how they influence our component. `attributes` property is all about any data that our component may use it to render itself. It can be set from outside, which is very useful when creating components from data that is, for example, fetched from the server.  In our case, `attributes` has only one property called `count`, which has a initial value of 0. 
 
-`methods` are where we store the functions, that we want to use with our component. In the example, we have `increment` function that sets the state to `count + 1`.
+The `render` property, which is a function, is about how our component will look like in the **DOM**. It's converted into a efficient data structure in run-time called `skeleton`. Our component has a parent `div`, which has a `h1`, and two `div`'s. In the first `div`, there is our **string variable**, `{{attributes.count}}`. This means whenever our component is being rendered, it will show `attributes.count`'s value instead. In our case, 0. In the last div, we used it to create another component inside our component, which is the `Counter` component with a key of 0. `lucid-id` is a number that specifies components id, while `lucid-key` is a unique number specifying which instance it is. When our component is rendered, `lucid.js`, will  render a `Counter` component here. 
 
-`render` is where we define the look of our component. It's written as a string template, but then Lucid translates it into a very efficient data-structure called `skeleton`. In the string template, we defined a `h1` inside a `div`. If you look closely to `h1`, you'll notice that it has an `onclick` event which is equal to `{{methods.increment}}` which means, each time you click on to that `h1`, Lucid is going to call increment method that we have defined. Lastly, the text content of our `h1` element has `{{state.count}}`. In Lucid, we call them `string variables`. Lucid will change `{{state.count}}` with the count of the state, when rendering. But don't worry, it will not show `{{state.count}}` as the text content even for a millisecond.
+The `watch` property, contains callbacks for `attribute`'s properties and called when they are changed by `Lucid.setAttribute` function. Each callback get two parameters that are **new value** and **old value**. In our case, we have a callback for `count` property. When it's changed, we will call `this.update` to make the component re-render itself.
 
-Now, let's look at how do we create an app and render our component. We call `Lucid.createApp` and assign it to a variable called `app`. This function has only one parameter, in which we specify the properties of our app. In our case, we set `containerId` to `app` which means Lucid is going to find the HTML element that has `app` as it's `id`, and set it as the container of our app.
+Now on to the `Counter` component, which has state, methods and render properties. `state` contains private data of our component which is not accessible from outside unlike the `attributes` which is public state of the component, accessible from outside by using `Lucid.getAttribute`. `state` has `count` property which has an initial value of 0.
 
-Lastly, we call `app.render` to render our component. First parameter specifies **where to put the component**, second specifies **what component to put**, and the last one specifies **which key to put it with**.
+`methods` contain functions that can be called by either `hooks`, `watch` or events in our DOM. If called by DOM events, `methods` will receive the event as a parameter. Our component has one method that is called `count`. When called, it will increase the `count` by one, set the `count` attribute of the **Page** component and re-render itself.
+
+In the `render`, we have a `div` with an `onclick` property which is set to `{{methods.count}}`, meaning when the click event is triggered, it will call `count` method that we have defined.
+
+Lastly, we render our `Page` component with a key of 0 inside a div.
+
+
+
+### API Reference
+
+------
 

@@ -12,8 +12,7 @@ const _Lucid = {
   components: {},
   componentId: 0,
   /** @type {Object<number, {}>[]} */
-  elements: [],
-  regex: new RegExp("(?<={{)(.*?)(?=}})", "gm")
+  elements: []
 }
 
 /**
@@ -314,8 +313,19 @@ function createSkeleton(child) {
  * @param {number} key 
  */
 function convertTextVariables(text, id, key) {
-  const variables = text.match(_Lucid.regex);
-  if (!variables) return text;
+  let variables = [];
+
+  let startIndex = text.indexOf("{{", 0);
+  let endIndex = text.indexOf("}}", startIndex + 2);
+
+  while (startIndex !== -1 && endIndex !== -1) {
+    variables.push(text.substring(startIndex + 2, endIndex));
+
+    startIndex = text.indexOf("{{", endIndex + 2);
+    endIndex = text.indexOf("}}", startIndex + 2);
+  }
+
+  if (variables.length === 0) return text;
 
   for (let i = 0; i < variables.length; ++i) {
     const properties = variables[i].split(".");

@@ -256,16 +256,16 @@ function removeComponent(component, key) {
   delete _Lucid.elements[component.id][key];
 }
 
-function getAttribute(id, key, attribute) {
-  return _Lucid.elements[id][key].attributes[attribute];
+function getAttribute(component, key, attribute) {
+  return _Lucid.elements[component.id][key].attributes[attribute];
 }
 
-function setAttribute(id, key, attribute, value) {
-  const oldValue = _Lucid.elements[id][key].attributes[attribute];
-  _Lucid.elements[id][key].attributes[attribute] = value;
+function setAttribute(component, key, attribute, value) {
+  const oldValue = _Lucid.elements[component.id][key].attributes[attribute];
+  _Lucid.elements[component.id][key].attributes[attribute] = value;
 
   // Call watch function of the attribute if exists
-  _Lucid.elements[id][key][attribute] && _Lucid.elements[id][key][attribute](oldValue, value);
+  _Lucid.elements[component.id][key][attribute] && _Lucid.elements[component.id][key][attribute](oldValue, value);
 }
 
 /**

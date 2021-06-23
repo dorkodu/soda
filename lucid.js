@@ -3,8 +3,7 @@ export const Lucid = {
   render: renderComponent,
   remove: removeComponent,
   getAttribute: getAttribute,
-  setAttribute: setAttribute,
-  context: {},
+  setAttribute: setAttribute
 }
 
 const _Lucid = {

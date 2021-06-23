@@ -239,7 +239,7 @@ const myComponent = Lucid.component({
 
 **this keyword**
 
-- [attributes](), [state](), [methods](), [render](), [hooks](), [watch](), [update]() function, `id` and `key` can be accessed from anywhere of the component with `this` keyword.
+- [attributes](), [state](), [methods](), [render](), [hooks](), [watch](), [update]() function, [refs](), `id` and `key` can be accessed from anywhere of the component with `this` keyword.
 
 
 
@@ -302,5 +302,53 @@ const myComponent = Lucid.component({
   });
   ```
 
+
+
+**referencing elements**
+
+- To have easy access to an inner element of the render template, elements are referenced using a special attribute "lucid-ref" which are added to `refs` property that can be accessed by `this.refs`.
+
+  ```js
+  const myComponent = Lucid.component({
+    methods: {
+      access: function (ev) {
+        console.log(this.refs["section2"]); /* Returns the DOM object that element */
+      }
+    }
+    render: function () {
+      return `
+        <div>
+  		<div>Section 1</div>
+          <div>
+            <div onclick="{{methods.access}}" lucid-ref="section2">Section 2</div>
+          </div>
+          <div>Section 3</div>
+  	  </div>
+      `;
+    }
+  });
+  ```
+
   
+
+#### Lucid.render(dom, component, key, attributes, settings)
+
+Renders the component with given key, attributes and settings.
+
+
+
+- **dom**
+  - Container of the component that is going to be rendered.
+- **component**
+  - Object of the component that is going to be rendered.
+- **key**
+  - Key of the component that is going to be rendered.
+  - All instances of the same component must have different keys.
+- **attributes (optional)**
+  - `attributes` of the component that is going to be rendered. 
+  - Is used instead of calling [Lucid.setAttribute]() after the component has been rendered.
+- **settings** **(optional)**
+  - Object that stores render settings of the component that is going to be rendered.
+  - Has 3 properties; first (boolean), last (boolean) and index (integer). For example, if first is true, the component will be the first child of it's parent, or if index is set to 4, it will be the forth child of it's parent.
+  - Note: If the parent, for example, has 3 children and index is set to 3, it will cause undefined behavior. Instead, last property should be used.
 

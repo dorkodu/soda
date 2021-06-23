@@ -90,8 +90,8 @@ A component has 6 properties (props); attributes, state, methods, render, hooks 
     ```js
     const myComponent = Lucid.component({
       attributes: {
-          name: "John Doe",
-    	  relations: { null }
+        name: "John Doe",
+    	relations: { null }
       }
     });
     ```
@@ -103,8 +103,8 @@ A component has 6 properties (props); attributes, state, methods, render, hooks 
     ```js
     const myComponent = Lucid.component({
       state: {
-          buttonPressed: true,
-          input: ""
+        buttonPressed: true,
+        input: ""
       }
     });
     ```
@@ -210,7 +210,7 @@ A component has 6 properties (props); attributes, state, methods, render, hooks 
     const myComponent = Lucid.component({
       attributes: { name: "John Doe" },
       watch: {
-          name: function () { ... }
+        name: function () { ... }
       }
     });
     ```
@@ -249,18 +249,18 @@ const myComponent = Lucid.component({
 
   ```js
   const myComponent = Lucid.component({
-      state: { name: "John Doe" },
-      methods: { 
-        changeName: function () {
-        	this.state.name = "Doe John";
-          this.update(); /* The component will be re-rendered and new name will be shown. */
+    state: { name: "John Doe" },
+    methods: { 
+      changeName: function () {
+        this.state.name = "Doe John";
+        this.update(); /* The component will be re-rendered and new name will be shown. */
         } 
       }
-      render: function () {
-          return `
-            <div onclick="{{methods.changeName}}">{{state.name}}</div>
-          `;
-      }
+    render: function () {
+      return `
+        <div onclick="{{methods.changeName}}">{{state.name}}</div>
+      `;
+    }
   });
   ```
 
@@ -352,6 +352,25 @@ Renders the component with given key, attributes and settings to the DOM.
   - Has 3 properties; first (boolean), last (boolean) and index (integer). For example, if first is true, the component will be the first child of it's parent, or if index is set to 4, it will be the forth child of it's parent.
   - Note: If the parent, for example, has 3 children and index is set to 3, it will cause undefined behavior. Instead, last property should be used.
 
+```js
+const Counter = Lucid.component({
+  state: { count: 0 },
+  methods: {
+    increment: function (ev) {
+      this.state.count++;
+      this.update();
+    }
+  },
+  render: function () {
+    return `<div onclick="{{methods.increment}}">{{state.count}}</div>`;
+  }
+});
+
+/* Counter component will be rendered as the first child of the container. */
+const container = document.getElementById("app");
+Lucid.render(container, Counter, 0, null, { first: true });
+```
+
 
 
 #### Lucid.remove(component, key)
@@ -365,5 +384,72 @@ Removes the component with the given key from the DOM.
 - **key**
   - Key of the component that is going to be removed.
 
+```js
+/* Our Counter component has been rendered */
+Lucid.render(document.getElementById("app"), Counter, 0);
 
+/* And now, it is removed from the DOM. */
+Lucid.remove(Counter, 0);
+```
+
+
+
+#### Lucid.getAttribute(component, key, attribute)
+
+Gets the specified attribute from the component.
+
+
+
+- component
+  - Object of the component.
+- key
+  - Key of the component.
+- attribute 
+  - A string that specifies which property is going to be get.
+
+```js
+const myComponent = Lucid.component({
+  attributes: { name: "John Doe" },
+  render: function () {
+    return `<div>{{attributes.name}}</div>`;
+  }
+});
+
+Lucid.render(document.getElementById("app"), Counter, 0);
+Lucid.getAttribute(myComponent, 0, "name"); /* "John Doe" */
+```
+
+
+
+#### Lucid.setAttribute(component, key, attribute, value)
+
+Sets the specified attribute of the component.
+
+
+
+- component
+  - Object of the component.
+- key
+  - Key of the component.
+- attribute 
+  - A string that specifies which property is going to be set.
+- value
+  - Anything that is going to be assigned to the specified attribute.
+
+```js
+const myComponent = Lucid.component({
+  attributes: { name: "John Doe" },
+  render: function () {
+    return `<div>{{attributes.name}}</div>`;
+  },
+  watch: {
+    name: function () { this.update() } /* Re-renders the component. */
+  }
+});
+
+Lucid.render(document.getElementById("app"), Counter, 0);
+
+/* The attribute name will be set to "Doe John" and the function inside watch will be called since they share the same attribute name. */
+Lucid.setAttribute(myComponent, 0, "name", "Doe John"); 
+```
 

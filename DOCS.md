@@ -81,7 +81,7 @@ Returns the component with it's properties and auto-assigned id.
 
 
 
-A component has 6 properties; attributes, state, methods, render, hooks and watch.
+A component has 6 properties (props); attributes, state, methods, render, hooks and watch.
 
 - ##### attributes (optional)
 
@@ -128,7 +128,7 @@ A component has 6 properties; attributes, state, methods, render, hooks and watc
 
 - ##### render
 
-  - A function that return a string which represents the look of the component on the DOM which is then converted into a efficient data-structure called [skeleton]().
+  - A function that returns a string which represents the look of the component on the DOM which is then converted into a efficient data-structure called [skeleton]().
 
     ```js
     const myComponent = Lucid.component({
@@ -143,7 +143,7 @@ A component has 6 properties; attributes, state, methods, render, hooks and watc
     });
     ```
 
-  - The render must at least have 1 element and parent element can not have a sibling.
+  - The render template must at least have 1 element and parent element can not have a sibling.
 
     ```js
     /* In this example, parent element has a sibling which will cause error. */
@@ -156,6 +156,28 @@ A component has 6 properties; attributes, state, methods, render, hooks and watc
       }
     });
     ```
+    
+  - In the render template, [string variables]() can be used, which makes components dynamic.
+
+    ```js
+    /* In this example, each time the div is clicked, the value it shows will be incremented */
+    const myComponent = Lucid.component({
+      state: { count: 0 },
+      methods: {
+        increment: function (ev) {
+          this.state.count++;
+          this.update();
+        }
+      },
+      render: function () {
+        return `
+          <div onclick="{{methods.increment}}">{{state.count}}</div>
+        `;
+      }
+    });
+    ```
+
+    
 
 - ##### hooks (optional)
 
@@ -217,5 +239,68 @@ const myComponent = Lucid.component({
 
 **this keyword**
 
-- attributes, state, methods, render, hooks, watch
+- [attributes](), [state](), [methods](), [render](), [hooks](), [watch](), [update]() function, `id` and `key` can be accessed from anywhere of the component with `this` keyword.
+
+
+
+**update** **function**
+
+- A function which forces the component to be re-rendered in a efficient manner. Should be used after an important `state` change in the component which changes look of the component.
+
+  ```js
+  const myComponent = Lucid.component({
+      state: { name: "John Doe" },
+      methods: { 
+        changeName: function () {
+        	this.state.name = "Doe John";
+          this.update(); /* The component will be re-rendered and new name will be shown. */
+        } 
+      }
+      render: function () {
+          return `
+            <div onclick="{{methods.changeName}}">{{state.name}}</div>
+          `;
+      }
+  });
+  ```
+
+
+
+**string variables**
+
+- Are variables that can be used in render template such as calling a function when a event fires, or showing the value of a `state` or `attributes` property. Example usage: {{methods.myFunction}}, {{state.ourValue}}, {{attributes.myValue}}.
+
+  ```js
+  /* In this example we have a component which shows "Hello world!". */
+  const myComponent = Lucid.component({
+    state: { text: "Hello" },
+    attributes: { text: "world" },
+    render: function () {
+      return `
+     	  <div>{{state.text}} {{attributes.text}}!</div>
+      `;
+    }
+  });
+  ```
+
+- Functions that are called on events receive the event object as a parameter.
+
+  ```js
+  const myComponent = Lucid.component({
+    state: { count: 0 },
+    methods: {
+      increment: function (ev) { /* Event object is received as "ev" parameter. */
+        this.state.count++;
+        this.update();
+      }
+    },
+    render: function () {
+      return `
+        <div onclick="{{methods.increment}}">{{state.count}}</div>
+      `;
+    }
+  });
+  ```
+
+  
 

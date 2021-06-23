@@ -238,23 +238,23 @@ function updateComponent(dom, skeleton, componentId, componentKey) {
  * @param {number} id
  * @param {number} key 
  */
-function removeComponent(id, key) {
-  const dom = _Lucid.elements[id][key].dom;
+function removeComponent(component, key) {
+  const dom = _Lucid.elements[component.id][key].dom;
 
   // Remove the component from the DOM
   dom.parentNode.removeChild(dom);
 
-  const childrenCount = _Lucid.elements[id][key].children.length;
+  const childrenCount = _Lucid.elements[component.id][key].children.length;
   for (let i = 0; i < childrenCount; ++i) {
-    const child = _Lucid.elements[id][key].children[i];
+    const child = _Lucid.elements[component.id][key].children[i];
     removeComponent(child.id, child.key);
   }
 
   // Call "disconnected" hook if exists
-  _Lucid.elements[id][key].disconnected && _Lucid.elements[id][key].disconnected();
+  _Lucid.elements[component.id][key].disconnected && _Lucid.elements[component.id][key].disconnected();
 
   // Delete it from the elements
-  delete _Lucid.elements[id][key];
+  delete _Lucid.elements[component.id][key];
 }
 
 function getAttribute(id, key, attribute) {

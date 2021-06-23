@@ -333,7 +333,7 @@ const myComponent = Lucid.component({
 
 #### Lucid.render(dom, component, key, attributes, settings)
 
-Renders the component with given key, attributes and settings.
+Renders the component with given key, attributes and settings to the DOM.
 
 
 
@@ -351,4 +351,19 @@ Renders the component with given key, attributes and settings.
   - Object that stores render settings of the component that is going to be rendered.
   - Has 3 properties; first (boolean), last (boolean) and index (integer). For example, if first is true, the component will be the first child of it's parent, or if index is set to 4, it will be the forth child of it's parent.
   - Note: If the parent, for example, has 3 children and index is set to 3, it will cause undefined behavior. Instead, last property should be used.
+
+
+
+#### Lucid.remove(component, key)
+
+Removes the component with the given key from the DOM.
+
+
+
+- **component**
+  - Object of the component that is going to be removed.
+- **key**
+  - Key of the component that is going to be removed.
+
+
 

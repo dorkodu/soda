@@ -2,7 +2,7 @@
 
 ------
 
-Just download our source code from [here](https://github.com/dorkodu/lucid) and put `lucid.js` into your project. Also, to use Lucid, `node.js` is not mandatory.
+Just download our source code from [here](https://github.com/dorkodu/lucid) and locate `lucid.js` into your project. Also, to use Lucid, `node.js` is not mandatory.
 
 
 
@@ -74,4 +74,148 @@ Lastly, we render our `Page` component with a key of 0 inside a div.
 ### API Reference
 
 ------
+
+#### Lucid.component(props)
+
+Returns the component with it's properties and auto-assigned id.
+
+
+
+A component has 6 properties; attributes, state, methods, render, hooks and watch.
+
+- ##### attributes (optional)
+
+  - An object that stores public data of a component. Can be set or accessed by [Lucid.setAttribute]() and [Lucid.getAttribute]() from outside of the component. To access inside the component itself, `this.attributes` is used.
+
+    ```js
+    const myComponent = Lucid.component({
+      attributes: {
+          name: "John Doe",
+    	  relations: { null }
+      }
+    });
+    ```
+
+- ##### state (optional)
+
+  - An object that stores private data of a component. Can not be set or accessed from the outside of the component unlike the [attributes](). To access inside the component itself, `this.state` is used.
+
+    ```js
+    const myComponent = Lucid.component({
+      state: {
+          buttonPressed: true,
+          input: ""
+      }
+    });
+    ```
+
+- ##### methods (optional)
+
+  - An object that contains functions that can only be used by the component. To call the methods, `this.method_name` is used.
+
+  - Functions inside the `methods` object must have a depth level of 1.
+
+    ```js
+    const myComponent = Lucid.component({
+      methods: {
+        myFunction: function () { ... },
+        myOtherFunction: function () { ... },
+        ourFunction: function () { ... },
+        container: { ourOtherFunction: function () { ... } } /* Since this function is inside a object, it will not work and will cause errors. */
+      }
+    });
+    ```
+
+- ##### render
+
+  - A function that return a string which represents the look of the component on the DOM which is then converted into a efficient data-structure called [skeleton]().
+
+    ```js
+    const myComponent = Lucid.component({
+      render: function () {
+        return `
+          <div>
+          	<h1>API Reference</h1>
+          	<p>...</p>
+          </div>
+        `;
+      }
+    });
+    ```
+
+  - The render must at least have 1 element and parent element can not have a sibling.
+
+    ```js
+    /* In this example, parent element has a sibling which will cause error. */
+    const myComponent = Lucid.component({
+      render: function () {
+        return `
+          <div>1</div>
+          <div>2</div>
+        `;
+      }
+    });
+    ```
+
+- ##### hooks (optional)
+
+  - An object that contains 4 optional functions; `created`, `connected`, `disconnected` and `updated`.
+
+  - **created:** Called once the memory has been first allocated for the component.
+
+  - **connected:** Called once the component's view has been added to the DOM.
+
+  - **disconnected:** Called once the component's view has been removed from the DOM.
+
+  - **updated:** Called once the update function (`this.update`) has been called.
+
+    ```js
+    const myComponent = Lucid.component({
+      hooks: {
+        created: function () { ... },
+        connected: function () { ... },
+        disconnected: function () { ... },
+        updated: function () { ... }
+      }
+    });
+    ```
+
+- ##### watch (optional)
+
+  - An object  that contains functions that are called once the same named `attribute` has been changed by [Lucid.setAttribute]().
+
+    ```js
+    const myComponent = Lucid.component({
+      attributes: { name: "John Doe" },
+      watch: {
+          name: function () { ... }
+      }
+    });
+    ```
+
+
+
+**Note:** When creating a component, it is highly advised not to have any function with the same name inside `methods`, `hooks` and `watch` as well as not naming any function `update` since it will cause undefined behavior.
+
+```js
+/* In this example, names of all 3 properties above are clashing. */
+const myComponent = Lucid.component({
+  methods: { myFunction: function () { ... } },
+  hooks: { myFunction: function () { ... } },
+  watch: { myFunction: function () { ... } }
+});
+```
+
+```js
+/* This example shows update function inside methods, which clashes with the update function that Lucid provides. */
+const myComponent = Lucid.component({
+  methods: { update: function () { ... } }
+});
+```
+
+
+
+**this keyword**
+
+- attributes, state, methods, render, hooks, watch
 

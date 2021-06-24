@@ -101,7 +101,12 @@ function renderComponent(dom, component, key, attributes, settings) {
     refs: {},
     children: [],
     dom: null,
-    update: function () {
+    setState: function (value) {
+      if (typeof value === "function")
+        this.state = value(this.state);
+      else if (typeof value === "object")
+        this.state = value;
+
       updateComponent(this.dom, _Lucid.components[this.id].props.skeleton, this.id, this.key);
 
       // Call "updated" hook if exists

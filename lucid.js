@@ -2,8 +2,7 @@ export const Lucid = {
   component: component,
   render: renderComponent,
   remove: removeComponent,
-  getAttribute: getAttribute,
-  setAttribute: setAttribute
+  instance: instance
 }
 
 const _Lucid = {
@@ -261,16 +260,20 @@ function removeComponent(component, key) {
   delete _Lucid.elements[component.id][key];
 }
 
-function getAttribute(component, key, attribute) {
-  return _Lucid.elements[component.id][key].attributes[attribute];
-}
+function instance(component, key) {
+  return {
+    attribute: function (attribute, value) {
+      if (typeof value !== "undefined") {
+        const oldValue = _Lucid.elements[component.id][key].attributes[attribute];
+        _Lucid.elements[component.id][key].attributes[attribute] = value;
 
-function setAttribute(component, key, attribute, value) {
-  const oldValue = _Lucid.elements[component.id][key].attributes[attribute];
-  _Lucid.elements[component.id][key].attributes[attribute] = value;
-
-  // Call watch function of the attribute if exists
-  _Lucid.elements[component.id][key][attribute] && _Lucid.elements[component.id][key][attribute](oldValue, value);
+        // Call watch function of the attribute if exists
+        _Lucid.elements[component.id][key][attribute] && _Lucid.elements[component.id][key][attribute](oldValue, value);
+      } else {
+        return _Lucid.elements[component.id][key].attributes[attribute];
+      }
+    }
+  };
 }
 
 /**

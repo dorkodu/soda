@@ -109,7 +109,7 @@ function renderComponent(dom, component, key, attributes, settings) {
       updateComponent(this.dom, _Lucid.components[this.id].props.skeleton, this.id, this.key);
 
       // Call "updated" hook if exists
-      _Lucid.elements[component.id][key].updated && _Lucid.elements[component.id][key].updated()
+      _Lucid.elements[component.id][key].h_updated && _Lucid.elements[component.id][key].h_updated()
     }
   })
 
@@ -142,7 +142,7 @@ function renderComponent(dom, component, key, attributes, settings) {
   if (attributes) _Lucid.elements[component.id][key].attributes = attributes;
 
   // Call "created" hook if exists
-  _Lucid.elements[component.id][key].created && _Lucid.elements[component.id][key].created()
+  _Lucid.elements[component.id][key].h_created && _Lucid.elements[component.id][key].h_created()
 
   let elem = document.createElement("div");
   connectComponent(elem, _Lucid.components[component.id].props.skeleton, component.id, key);
@@ -172,7 +172,7 @@ function renderComponent(dom, component, key, attributes, settings) {
   _Lucid.elements[component.id][key].dom = elem;
 
   // Call "connected" hook if exists
-  _Lucid.elements[component.id][key].connected && _Lucid.elements[component.id][key].connected()
+  _Lucid.elements[component.id][key].h_connected && _Lucid.elements[component.id][key].h_connected()
 }
 
 /**
@@ -250,26 +250,28 @@ function updateComponent(dom, skeleton, componentId, componentKey) {
 
 /**
  * 
- * @param {number} id
+ * @param {Component | number} component
  * @param {number} key 
  */
 function removeComponent(component, key) {
-  const dom = _Lucid.elements[component.id][key].dom;
+  const id = typeof component === "number" ? component : component.id;
+
+  const dom = _Lucid.elements[id][key].dom;
 
   // Remove the component from the DOM
   dom.parentNode.removeChild(dom);
 
-  const childrenCount = _Lucid.elements[component.id][key].children.length;
+  const childrenCount = _Lucid.elements[id][key].children.length;
   for (let i = 0; i < childrenCount; ++i) {
-    const child = _Lucid.elements[component.id][key].children[i];
+    const child = _Lucid.elements[id][key].children[i];
     removeComponent(child.id, child.key);
   }
 
   // Call "disconnected" hook if exists
-  _Lucid.elements[component.id][key].disconnected && _Lucid.elements[component.id][key].disconnected();
+  _Lucid.elements[id][key].h_disconnected && _Lucid.elements[id][key].h_disconnected();
 
   // Delete it from the elements
-  delete _Lucid.elements[component.id][key];
+  delete _Lucid.elements[id][key];
 }
 
 function instance(component, key) {
@@ -280,7 +282,7 @@ function instance(component, key) {
         _Lucid.elements[component.id][key].attributes[attribute] = value;
 
         // Call watch function of the attribute if exists
-        _Lucid.elements[component.id][key][attribute] && _Lucid.elements[component.id][key][attribute](oldValue, value);
+        _Lucid.elements[component.id][key]["w_" + attribute] && _Lucid.elements[component.id][key]["w_" + attribute](oldValue, value);
       } else {
         return _Lucid.elements[component.id][key].attributes[attribute];
       }

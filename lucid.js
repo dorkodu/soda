@@ -1,41 +1,33 @@
 export const Lucid = {
-  createComponent: createComponent,
-  createApp: createApp
-};
+  component: component,
+  render: renderComponent,
+  remove: removeComponent,
+  instance: instance
+}
 
 const _Lucid = {
-  /** @type {Object.<string, Component>} */
+  /** @type {Object<number, Component>} */
   components: {},
-  /** @type {{state: object, attributes: object, dom: HTMLElement}} */
-  elements: {},
-  app: {
-    getAttribute: getComponentAttribute,
-    setAttribute: setComponentAttribute,
-    render: renderComponent,
-    remove: disconnectComponent,
-    use: use,
-    context: {},
-    /** @type {HTMLElement} */
-    container: null,
-  }
-};
+  componentId: 0,
+  /** @type {Object<number, {}>[]} */
+  elements: []
+}
 
 /**
  * @typedef {object} Component
- * 
- * @property {string} name
- * @property {object} state 
- * @property {() => string} render 
- * @property {Object.<string, Function>} methods 
- * @property {Hooks} hooks
+ * @property {number} id
  * @property {object} attributes 
- * @property {Object.<string, (oldValue: any, newValue: any) => undefined>} watch 
- * @property {Skeleton} skeleton
+ * @property {object} state 
+ * @property {Object<string, function>} methods 
+ * @property {Hooks} hooks 
+ * @property {Object<string, (oldValue: any, newValue: any) => any} watch 
+ * @property {object} props
+ * @property {Skeleton} props.skeleton
+ * @property {() => string} props.render 
  */
 
 /**
  * @typedef {object} Hooks
- * 
  * @property {Function} [created]
  * @property {Function} [connected]
  * @property {Function} [disconnected] 
@@ -51,122 +43,149 @@ const _Lucid = {
  */
 
 /**
- * Returns the component that's created from given name and properties.
- * @param {string} name 
- * @param {object} properties
- * @param {object} [properties.state] 
- * @param {object} [properties.attributes]
- * @param {Object.<string, Function>} [properties.methods] 
- * @param {() => string} properties.render
- * @param {Hooks} [properties.hooks]
- * @param {Object.<string, (oldValue: any, newValue: any) => undefined>} [properties.watch]
  * 
- * @returns {Component} Component
+ * @param {object} props
+ * @param {object} props.attributes 
+ * @param {object} props.state 
+ * @param {Object<string, function>} props.methods 
+ * @param {() => string} props.render 
+ * @param {Hooks} props.hooks 
+ * @param {Object<string, (oldValue: any, newValue: any) => any} props.watch 
+ * @returns {Component}
  */
-function createComponent(name, properties) {
-  // Return if component is somehow already been created
-  if (_Lucid.components[name])
-    return;
+function component(props) {
+  _Lucid.components[_Lucid.componentId] = {
+    id: _Lucid.componentId,
+    attributes: props.attributes,
+    state: props.state,
+    methods: props.methods,
+    hooks: props.hooks,
+    watch: props.watch,
+    props: {
+      skeleton: null,
+      render: props.render
+    }
+  }
 
-  _Lucid.components[name] = {
-    name: name,
-    state: properties.state,
-    methods: properties.methods,
-    render: properties.render,
-    hooks: properties.hooks,
-    attributes: properties.attributes,
-    watch: properties.watch,
-    skeleton: null
-  };
+  // Initialize component in elements array
+  _Lucid.elements[_Lucid.componentId] = {};
 
-  return _Lucid.components[name];
-}
-
-/**
- * Returns the app
- * @param {string} containerId 
- * @returns 
- */
-function createApp(containerId) {
-  // Get the container
-  _Lucid.app.container = document.getElementById(containerId);
-
-  return _Lucid.app;
-}
-
-/**
- * 
- * @param {string} key 
- * @param {any} value 
- */
-function use(key, value) {
-  _Lucid.app.context[key] = value;
+  return _Lucid.components[_Lucid.componentId++];
 }
 
 /**
  * 
  * @param {HTMLElement} dom 
- * @param {string} componentName 
- * @param {string | number} componentKey 
+ * @param {Component} component
+ * @param {number} key 
  * @param {object} [attributes] 
- * @param {boolean} [hasOwnContainer]
+ * @param {{first: boolean, last: boolean, index: number}} [settings] 
  */
-function renderComponent(dom, componentName, componentKey, attributes, hasOwnContainer) {
-  // If the component that is going to be rendered does not have a skeleton yet, create a skeleton for it
-  if (!_Lucid.components[componentName].skeleton) {
+function renderComponent(dom, component, key, attributes, settings) {
+  // Check if component has it's skeleton created, if not, create it's skeleton
+  if (_Lucid.components[component.id].props.skeleton === null) {
     const elem = document.createElement("div");
-
-    // Fix bug with src, if src is set, it will request the src and
-    // will fail if it's a string variable (e.g. {{state.photoPath}})
-    let elemHTML = _Lucid.components[componentName].render();
-    elem.innerHTML = elemHTML.replace("src=", "srcName=");
-
-    // Create the skeleton out of the first element node
-    const childNodes = Array.from(elem.childNodes);
-    for (let i = 0; i < childNodes.length; ++i)
-      if (childNodes[i].nodeType === Node.ELEMENT_NODE) {
-        _Lucid.components[componentName].skeleton = createSkeleton(childNodes[i], componentName);
-        break;
-      }
+    elem.innerHTML = _Lucid.components[component.id].props.render().replace("src=", "srcname=");
+    _Lucid.components[component.id].props.skeleton = createSkeleton(elem.firstElementChild);
   }
 
-  let elem;
-  if (!hasOwnContainer) {
-    elem = document.createElement("div");
-    elem.setAttribute("lucid-component", componentName);
-    elem.setAttribute("lucid-key", componentKey);
+  _Lucid.elements[component.id][key] = Object.assign({}, {
+    id: component.id,
+    key: key,
+    state: _Lucid.components[component.id].state,
+    attributes: _Lucid.components[component.id].attributes,
+    methods: {},
+    watch: {},
+    hooks: {},
+    refs: {},
+    children: [],
+    dom: null,
+    setState: function (value) {
+      if (typeof value === "function")
+        this.state = value(this.state);
+      else if (typeof value === "object")
+        this.state = value;
+
+      updateComponent(this.dom, _Lucid.components[this.id].props.skeleton, this.id, this.key);
+
+      // Call "updated" hook if exists
+      _Lucid.elements[component.id][key].h_updated && _Lucid.elements[component.id][key].h_updated()
+    }
+  })
+
+  for (const methodKey in _Lucid.components[component.id].methods) {
+    _Lucid.elements[component.id][key]["m_" + methodKey] = _Lucid.components[component.id].methods[methodKey];
+    _Lucid.elements[component.id][key].methods[methodKey] = () => { _Lucid.elements[component.id][key]["m_" + methodKey](); }
+  }
+  for (const watchKey in _Lucid.components[component.id].watch) {
+    _Lucid.elements[component.id][key]["w_" + watchKey] = _Lucid.components[component.id].watch[watchKey];
+    _Lucid.elements[component.id][key].watch[watchKey] = () => { _Lucid.elements[component.id][key]["w_" + watchKey](); }
+  }
+  for (const hooksKey in _Lucid.components[component.id].hooks) {
+    _Lucid.elements[component.id][key]["h_" + hooksKey] = _Lucid.components[component.id].hooks[hooksKey];
+    _Lucid.elements[component.id][key].hooks[hooksKey] = () => { _Lucid.elements[component.id][key]["h_" + hooksKey](); }
+  }
+
+  // Find the parent of the current component that's being rendered
+  let parentNode = dom;
+  while (parentNode) {
+    const parentId = dom.getAttribute("lucid-id");
+    const parentKey = dom.getAttribute("lucid-key");
+    if (parentId && parentKey) {
+      _Lucid.elements[parentId][parentKey].children.push({ id: component.id, key: key });
+      break;
+    }
+    parentNode = parentNode.parentElement;
+  }
+
+  // Over-write to default attributes if provided
+  if (attributes) _Lucid.elements[component.id][key].attributes = attributes;
+
+  // Call "created" hook if exists
+  _Lucid.elements[component.id][key].h_created && _Lucid.elements[component.id][key].h_created()
+
+  let elem = document.createElement("div");
+  connectComponent(elem, _Lucid.components[component.id].props.skeleton, component.id, key);
+  elem = elem.firstChild;
+
+  // Render the component to the appropriate position
+  if (!settings) {
+    dom.appendChild(elem);
   } else {
-    elem = dom;
+    if (settings.first !== undefined) {
+      if (dom.firstChild)
+        dom.insertBefore(elem, dom.firstChild);
+      else
+        dom.appendChild(elem);
+    } else if (settings.index) {
+      dom.insertBefore(elem, dom.children[settings.index])
+    }
+    else
+      dom.appendChild(elem)
   }
 
-  // Save component's state and DOM into lucid for later use
-  _Lucid.elements[componentName + componentKey] = {
-    state: _Lucid.components[componentName].state,
-    attributes: attributes ? attributes : {},
-    dom: elem
-  };
+  // Set 2 lucid attributes, "lucid-id" and "lucid-key"
+  elem.setAttribute("lucid-id", component.id);
+  elem.setAttribute("lucid-key", key);
 
-  // Check if hooks exist, if exist, then call "created" function if exists
-  _Lucid.components[componentName].hooks && _Lucid.components[componentName].hooks.created && _Lucid.components[componentName].hooks.created.call(getThisParameter(componentName, componentKey));
+  // Set the dom of the element, since it has been connected
+  _Lucid.elements[component.id][key].dom = elem;
 
-  connectComponent(elem, _Lucid.components[componentName].skeleton, componentName, componentKey);
-  if (!hasOwnContainer) dom.appendChild(elem);
-
-  // Check if hooks exist, if exist, then call "connected" function if exists
-  _Lucid.components[componentName].hooks && _Lucid.components[componentName].hooks.connected && _Lucid.components[componentName].hooks.connected.call(getThisParameter(componentName, componentKey));
+  // Call "connected" hook if exists
+  _Lucid.elements[component.id][key].h_connected && _Lucid.elements[component.id][key].h_connected()
 }
 
 /**
  * 
  * @param {HTMLElement} dom 
  * @param {Skeleton} skeleton 
- * @param {string} componentName 
- * @param {string | number} componentKey 
+ * @param {number} id 
+ * @param {number} key 
  */
-function connectComponent(dom, skeleton, componentName, componentKey) {
+function connectComponent(dom, skeleton, componentId, componentKey) {
   // If skeleton is a string, it's a text node that is the only child
   if (typeof skeleton === "string") {
-    const textNode = document.createTextNode(convertTextVariables(skeleton, componentName, componentKey));
+    const textNode = document.createTextNode(convertTextVariables(skeleton, componentId, componentKey));
     dom.appendChild(textNode);
     return;
   }
@@ -174,130 +193,114 @@ function connectComponent(dom, skeleton, componentName, componentKey) {
   const elem = document.createElement(skeleton.tag);
 
   for (const key in skeleton.attrs) {
-    if (key.startsWith("on")) {
-      elem.addEventListener(key.substr(2), function (ev) {
-        skeleton.attrs[key].call(getThisParameter(componentName, componentKey), ev);
-      });
-    }
-    else {
-      const result = convertTextVariables(skeleton.attrs[key], componentName, componentKey)
+    const result = convertTextVariables(skeleton.attrs[key], componentId, componentKey);
 
-      // Fix bug with src, if src is set, it will request the src and
-      // will fail if it's a string variable (e.g. {{state.photoPath}})
-      elem.setAttribute(key === "srcname" ? "src" : key, result);
-    }
+    if (key.startsWith("on"))
+      elem.addEventListener(key.substr(2), (ev) => { result(ev); });
+    else
+      elem.setAttribute(key.replace("srcname", "src"), result);
   }
 
-  // Get 2 lucid attributes, "lucid-component" and "lucid-key"
-  const lucidComponent = elem.getAttribute("lucid-component");
-  const lucidKey = elem.getAttribute("lucid-key");
-
-  // If component name and key are present in the node, it's a lucid component
-  if (lucidComponent || lucidKey)
-    renderComponent(elem, lucidComponent, lucidKey, null, true);
-
   for (let i = 0; i < skeleton.children.length; ++i)
-    connectComponent(elem, skeleton.children[i], componentName, componentKey);
+    connectComponent(elem, skeleton.children[i], componentId, componentKey);
 
   dom.appendChild(elem);
+
+  // Get "lucid-ref" attribute, if exists, set the ref of the dom on the element
+  const ref = elem.getAttribute("lucid-ref");
+  if (ref)
+    _Lucid.elements[componentId][componentKey].refs[ref] = elem;
+
+  // Get 2 lucid attributes, "lucid-id" and "lucid-key"
+  const lucidId = elem.getAttribute("lucid-id");
+  const lucidKey = elem.getAttribute("lucid-key");
+
+  // If component id and key are present in the node, it's a lucid component
+  if (lucidId || lucidKey) {
+    const newElem = document.createElement("div");
+    renderComponent(newElem, { id: lucidId }, lucidKey);
+    dom.replaceChild(newElem.firstChild, elem);
+  }
 }
 
-/**
- * 
- * @param {string} componentName Name of the component. 
- * @param {string | number} componentKey Key of the component.
- */
-function disconnectComponent(componentName, componentKey) {
-  const elementKey = componentName + componentKey;
-  const dom = _Lucid.elements[elementKey].dom;
-
-  // Remove the component from the dom, then call "disconnected" hook
-  dom.parentNode.removeChild(dom);
-
-  // Check if hooks exist, if exist, then call "disconnected" function if exists
-  _Lucid.components[componentName].hooks && _Lucid.components[componentName].hooks.disconnected && _Lucid.components[componentName].hooks.disconnected.call(getThisParameter(componentName, componentKey));
-
-  delete _Lucid.elements[elementKey];
-}
-
-/**
- * 
- * @param {HTMLElement} dom 
- * @param {Skeleton} skeleton 
- * @param {number} elementKey 
- */
-function updateComponent(dom, skeleton, componentName, componentKey) {
+function updateComponent(dom, skeleton, componentId, componentKey) {
   if (typeof skeleton === "string") {
-    dom.nodeValue = convertTextVariables(skeleton, componentName, componentKey);
+    const result = convertTextVariables(skeleton, componentId, componentKey);
+    if (result !== dom.nodeValue) dom.nodeValue = result;
     return;
   }
 
   for (const key in skeleton.attrs) {
     // Only change the attributes that are not functions,
     // because only {{state.*}} attributes can change
-    if (typeof skeleton.attrs[key] !== "function") {
-      const result = convertTextVariables(skeleton.attrs[key], componentName, componentKey);
-      dom.setAttribute(key, result);
+    if (!key.startsWith("on")) {
+      const result = convertTextVariables(skeleton.attrs[key], componentId, componentKey);
+      if (dom.getAttribute(key) !== result) dom.setAttribute(key, result);
     }
   }
 
   const childNodes = Array.from(dom.childNodes);
   for (let i = 0; i < childNodes.length; ++i) {
-    // Check also if there isa skeleton for the dom child
+    // Check also if there is a skeleton for the dom child
     if (skeleton.children[i]) {
-      updateComponent(childNodes[i], skeleton.children[i], componentName, componentKey);
+      updateComponent(childNodes[i], skeleton.children[i], componentId, componentKey);
     }
   }
 }
 
 /**
  * 
- * @param {string} componentName 
- * @param {number} componentkey 
- * @param {string} attribute 
- * @returns 
+ * @param {Component | number} component
+ * @param {number} key 
  */
-function getComponentAttribute(componentName, componentkey, attribute) {
-  return _Lucid.elements[componentName + componentkey].attributes[attribute];
+function removeComponent(component, key) {
+  const id = typeof component === "number" ? component : component.id;
+
+  const dom = _Lucid.elements[id][key].dom;
+
+  // Remove the component from the DOM
+  dom.parentNode.removeChild(dom);
+
+  const childrenCount = _Lucid.elements[id][key].children.length;
+  for (let i = 0; i < childrenCount; ++i) {
+    const child = _Lucid.elements[id][key].children[i];
+    removeComponent(child.id, child.key);
+  }
+
+  // Call "disconnected" hook if exists
+  _Lucid.elements[id][key].h_disconnected && _Lucid.elements[id][key].h_disconnected();
+
+  // Delete it from the elements
+  delete _Lucid.elements[id][key];
 }
 
-/**
- * 
- * @param {string} componentName 
- * @param {number} componentKey 
- * @param {string} attribute 
- * @param {any} value 
- */
-function setComponentAttribute(componentName, componentKey, attribute, value) {
-  const elementKey = componentName + componentKey;
+function instance(component, key) {
+  return {
+    attribute: function (attribute, value) {
+      if (typeof value !== "undefined") {
+        const oldValue = _Lucid.elements[component.id][key].attributes[attribute];
+        _Lucid.elements[component.id][key].attributes[attribute] = value;
 
-  const oldValue = _Lucid.elements[elementKey].attributes[attribute];
-  _Lucid.elements[elementKey].attributes[attribute] = value;
-
-  // Check if watch exist, if exist, then call attribute's function if exists
-  _Lucid.components[componentName].watch && _Lucid.components[componentName].watch[attribute] && _Lucid.components[componentName].watch[attribute].call(getThisParameter(componentName, componentKey), oldValue, value);
-
-  updateComponent(_Lucid.elements[elementKey].dom.firstChild,
-    _Lucid.components[componentName].skeleton,
-    componentName, componentKey);
-
-  // Check if hooks exist, if exist, then call "updated" function if exists
-  _Lucid.components[componentName].hooks && _Lucid.components[componentName].hooks.updated && _Lucid.components[componentName].hooks.updated.call(getThisParameter(componentName, componentKey));
+        // Call watch function of the attribute if exists
+        _Lucid.elements[component.id][key]["w_" + attribute] && _Lucid.elements[component.id][key]["w_" + attribute](oldValue, value);
+      } else {
+        return _Lucid.elements[component.id][key].attributes[attribute];
+      }
+    }
+  };
 }
 
 /**
  * 
  * @param {HTMLElement} child 
- * @param {string} componentName
- * 
- * @returns {Skeleton} Skeleton
+ * @returns {Skeleton}
  */
-function createSkeleton(child, componentName) {
+function createSkeleton(child) {
   if (child.nodeType !== Node.ELEMENT_NODE) {
     const nodeValue = child.nodeValue.trim();
-    if (nodeValue !== "") {
+
+    if (nodeValue !== "")
       return nodeValue;
-    }
 
     return null;
   }
@@ -308,22 +311,16 @@ function createSkeleton(child, componentName) {
     children: []
   };
 
-  for (let i = 0; i < child.attributes.length; ++i) {
-    if (child.attributes[i].specified) {
-      if (child.attributes[i].name.startsWith("on")) {
-        const func = convertTextVariables(child.attributes[i].value, componentName);
-        skeleton.attrs[child.attributes[i].name] = func;
-      } else {
-        skeleton.attrs[child.attributes[i].name] = child.attributes[i].value;
-      }
-    }
-  }
+  // Set attributs of the html element
+  for (let i = 0; i < child.attributes.length; ++i)
+    skeleton.attrs[child.attributes[i].name] = child.attributes[i].value;
 
+  // Loop through all child nodes of the html element, if not empty, add on to the children array
   const childNodes = Array.from(child.childNodes);
   for (let i = 0; i < childNodes.length; ++i) {
-    const childSkeleton = createSkeleton(childNodes[i], componentName);
+    const childSkeleton = createSkeleton(childNodes[i]);
 
-    if (childSkeleton)
+    if (childSkeleton !== null)
       skeleton.children.push(childSkeleton);
   }
 
@@ -332,80 +329,39 @@ function createSkeleton(child, componentName) {
 
 /**
  * 
- * @param {string} componentName Name of the component.
- * @param {string | number} componentKey Key of the component.
- * 
- * @returns {{name: string, key: string, dom: HTMLElement, state: object, setState: (newState: object) => void}
- */
-function getThisParameter(componentName, componentKey) {
-  const elementKey = componentName + componentKey;
-
-  return {
-    name: componentName,
-    key: componentKey,
-    dom: _Lucid.elements[elementKey].dom.firstChild,
-    state: _Lucid.elements[elementKey].state,
-    attributes: _Lucid.elements[elementKey].attributes,
-    methods: _Lucid.components[componentName].methods,
-    setState: function (newState) {
-      // Save the new state
-      _Lucid.elements[elementKey].state = newState;
-
-      // Re-render the element if it has a dom
-      if (_Lucid.elements[elementKey].dom.firstChild) {
-        updateComponent(_Lucid.elements[elementKey].dom.firstChild,
-          _Lucid.components[componentName].skeleton,
-          componentName, componentKey);
-      }
-
-      // Check if hooks exist, if exist, then call "updated" function if exists
-      _Lucid.components[componentName].hooks && _Lucid.components[componentName].hooks.updated && _Lucid.components[componentName].hooks.updated.call(this);
-    }
-  };
-}
-
-/**
- * Replaces text variables(e.g. {{state.count}}) with their correct value that's saved in either state or methods.
  * @param {string} text 
- * @param {string} componentName Name of the component that the text variable belongs to.
- * @param {number} [componentKey] If key is provided, state will be used to convert the text, methods otherwise.
- * 
- * @returns {string | Function} Text with the variables replaced or function converted from string variable
+ * @param {number} id 
+ * @param {number} key 
  */
-function convertTextVariables(text, componentName, componentKey) {
-  // Convert key to string because if the key is 0, wrong things may happen
-  if (componentKey != null)
-    componentKey = componentKey.toString();
+function convertTextVariables(text, id, key) {
+  let variables = [];
 
   let startIndex = text.indexOf("{{", 0);
   let endIndex = text.indexOf("}}", startIndex + 2);
 
-  if (!componentKey) {
-    const variable = text.substring(startIndex + 2, endIndex);
-    const properties = variable.split(".");
+  while (startIndex !== -1 && endIndex !== -1) {
+    variables.push(text.substring(startIndex + 2, endIndex));
 
-    let tempObj = _Lucid.components[componentName];
-    for (let i = 0; i < properties.length; ++i)
-      tempObj = tempObj[properties[i]];
-
-    return tempObj;
-  } else {
-    const elementKey = componentName + componentKey;
-
-    while (startIndex > -1 && endIndex > -1) {
-      const variable = text.substring(startIndex + 2, endIndex);
-      const properties = variable.split(".");
-
-      let tempObj = _Lucid.elements[elementKey];
-      for (let i = 0; i < properties.length; ++i)
-        tempObj = tempObj[properties[i]];
-
-      text = text.replace("{{" + variable + "}}", tempObj);
-
-      startIndex = text.indexOf("{{", 0);
-      endIndex = text.indexOf("}}", startIndex + 2);
-    }
-
-    return text;
+    startIndex = text.indexOf("{{", endIndex + 2);
+    endIndex = text.indexOf("}}", startIndex + 2);
   }
+
+  if (variables.length === 0) return text;
+
+  for (let i = 0; i < variables.length; ++i) {
+    const properties = variables[i].split(".");
+
+    if (properties[0] === "attributes" || properties[0] === "state") {
+      let tempObj = _Lucid.elements[id][key];
+      for (let j = 0; j < properties.length; ++j)
+        tempObj = tempObj[properties[j]];
+
+      text = text.replace("{{" + variables[i] + "}}", tempObj);
+    }
+    else if (properties[0] === "methods") {
+      return _Lucid.elements[id][key]["m_" + properties[1]].bind(_Lucid.elements[id][key]);
+    }
+  }
+
+  return text;
 }

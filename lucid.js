@@ -58,20 +58,14 @@ function component(props) {
     id: _Lucid.componentId,
     attributes: props.attributes,
     state: props.state,
+    methods: props.methods,
+    hooks: props.hooks,
+    watch: props.watch,
     props: {
       skeleton: null,
       render: props.render
     }
   }
-
-  for (const key in props.methods)
-    _Lucid.components[_Lucid.componentId][key] = props.methods[key];
-
-  for (const key in props.hooks)
-    _Lucid.components[_Lucid.componentId][key] = props.hooks[key];
-
-  for (const key in props.watch)
-    _Lucid.components[_Lucid.componentId][key] = props.watch[key];
 
   // Initialize component in elements array
   _Lucid.elements[_Lucid.componentId] = {};
@@ -95,8 +89,14 @@ function renderComponent(dom, component, key, attributes, settings) {
     _Lucid.components[component.id].props.skeleton = createSkeleton(elem.firstElementChild);
   }
 
-  _Lucid.elements[component.id][key] = Object.assign({}, _Lucid.components[component.id], {
+  _Lucid.elements[component.id][key] = Object.assign({}, {
+    id: component.id,
     key: key,
+    state: _Lucid.components[component.id].state,
+    attributes: _Lucid.components[component.id].attributes,
+    methods: {},
+    watch: {},
+    hooks: {},
     refs: {},
     children: [],
     dom: null,
@@ -112,7 +112,19 @@ function renderComponent(dom, component, key, attributes, settings) {
       _Lucid.elements[component.id][key].updated && _Lucid.elements[component.id][key].updated()
     }
   })
-  delete _Lucid.elements[component.id][key].props;
+
+  for (const methodKey in _Lucid.components[component.id].methods) {
+    _Lucid.elements[component.id][key]["m_" + methodKey] = _Lucid.components[component.id].methods[methodKey];
+    _Lucid.elements[component.id][key].methods[methodKey] = () => { _Lucid.elements[component.id][key]["m_" + methodKey](); }
+  }
+  for (const watchKey in _Lucid.components[component.id].watch) {
+    _Lucid.elements[component.id][key]["w_" + watchKey] = _Lucid.components[component.id].watch[watchKey];
+    _Lucid.elements[component.id][key].watch[watchKey] = () => { _Lucid.elements[component.id][key]["w_" + watchKey](); }
+  }
+  for (const hooksKey in _Lucid.components[component.id].hooks) {
+    _Lucid.elements[component.id][key]["h_" + hooksKey] = _Lucid.components[component.id].hooks[hooksKey];
+    _Lucid.elements[component.id][key].hooks[hooksKey] = () => { _Lucid.elements[component.id][key]["h_" + hooksKey](); }
+  }
 
   // Find the parent of the current component that's being rendered
   let parentNode = dom;
@@ -337,14 +349,16 @@ function convertTextVariables(text, id, key) {
   for (let i = 0; i < variables.length; ++i) {
     const properties = variables[i].split(".");
 
-    let tempObj = _Lucid.elements[id][key];
-    for (let j = properties[0] === "methods" ? 1 : 0; j < properties.length; ++j)
-      tempObj = tempObj[properties[j]];
+    if (properties[0] === "attributes" || properties[0] === "state") {
+      let tempObj = _Lucid.elements[id][key];
+      for (let j = 0; j < properties.length; ++j)
+        tempObj = tempObj[properties[j]];
 
-    if (properties[0] === "attributes" || properties[0] === "state")
       text = text.replace("{{" + variables[i] + "}}", tempObj);
-    else if (properties[0] === "methods")
-      return tempObj.bind(_Lucid.elements[id][key]);
+    }
+    else if (properties[0] === "methods") {
+      return _Lucid.elements[id][key]["m_" + properties[1]].bind(_Lucid.elements[id][key]);
+    }
   }
 
   return text;

@@ -115,15 +115,15 @@ function renderComponent(dom, component, key, attributes, settings) {
 
   for (const methodKey in _Lucid.components[component.id].methods) {
     _Lucid.elements[component.id][key]["m_" + methodKey] = _Lucid.components[component.id].methods[methodKey];
-    _Lucid.elements[component.id][key].methods[methodKey] = () => { _Lucid.elements[component.id][key]["m_" + methodKey](); }
+    _Lucid.elements[component.id][key].methods[methodKey] = (...args) => { _Lucid.elements[component.id][key]["m_" + methodKey](...args); }
   }
   for (const watchKey in _Lucid.components[component.id].watch) {
     _Lucid.elements[component.id][key]["w_" + watchKey] = _Lucid.components[component.id].watch[watchKey];
-    _Lucid.elements[component.id][key].watch[watchKey] = () => { _Lucid.elements[component.id][key]["w_" + watchKey](); }
+    _Lucid.elements[component.id][key].watch[watchKey] = (...args) => { _Lucid.elements[component.id][key]["w_" + watchKey](...args); }
   }
   for (const hooksKey in _Lucid.components[component.id].hooks) {
     _Lucid.elements[component.id][key]["h_" + hooksKey] = _Lucid.components[component.id].hooks[hooksKey];
-    _Lucid.elements[component.id][key].hooks[hooksKey] = () => { _Lucid.elements[component.id][key]["h_" + hooksKey](); }
+    _Lucid.elements[component.id][key].hooks[hooksKey] = (...args) => { _Lucid.elements[component.id][key]["h_" + hooksKey](...args); }
   }
 
   // Find the parent of the current component that's being rendered

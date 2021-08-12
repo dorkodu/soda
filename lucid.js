@@ -193,12 +193,16 @@ function connectComponent(dom, skeleton, componentId, componentKey) {
   const elem = document.createElement(skeleton.tag);
 
   for (const key in skeleton.attrs) {
-    const result = convertTextVariables(skeleton.attrs[key], componentId, componentKey);
+    let result;
 
-    if (key.startsWith("on"))
+    if (key.startsWith("on")) {
+      result = convertTextVariables(skeleton.attrs[key], componentId, componentKey, true);
       elem.addEventListener(key.substr(2), (ev) => { result(ev); });
-    else
+    }
+    else {
+      result = convertTextVariables(skeleton.attrs[key], componentId, componentKey);
       elem.setAttribute(key.replace("srcname", "src"), result);
+    }
   }
 
   for (let i = 0; i < skeleton.children.length; ++i)
@@ -332,8 +336,9 @@ function createSkeleton(child) {
  * @param {string} text 
  * @param {number} id 
  * @param {number} key 
+ * @param {boolean} isEvent
  */
-function convertTextVariables(text, id, key) {
+function convertTextVariables(text, id, key, isEvent) {
   let variables = [];
 
   let startIndex = text.indexOf("{{", 0);
@@ -359,7 +364,10 @@ function convertTextVariables(text, id, key) {
       text = text.replace("{{" + variables[i] + "}}", tempObj);
     }
     else if (properties[0] === "methods") {
-      return _Lucid.elements[id][key]["m_" + properties[1]].bind(_Lucid.elements[id][key]);
+      if (isEvent)
+        return _Lucid.elements[id][key]["m_" + properties[1]].bind(_Lucid.elements[id][key]);
+      else
+        return _Lucid.elements[id][key]["m_" + properties[1]]();
     }
   }
 

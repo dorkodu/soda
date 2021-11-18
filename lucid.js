@@ -217,7 +217,7 @@ class Lucid {
       // If component id and key are present in the node, it's a lucid component
       if (lucidId || lucidKey) {
         const newElem = document.createElement("div");
-        renderComponent(newElem, { id: lucidId }, lucidKey);
+        render(newElem, { id: lucidId }, lucidKey);
         dom.replaceChild(newElem.firstChild, elem);
       }
     }

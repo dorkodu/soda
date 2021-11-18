@@ -78,7 +78,7 @@ class Lucid {
      */
     this.render = function (dom, component, key, attributes, settings) {
       // Check if component has it's skeleton created, if not, create it's skeleton
-      if (components[component.id].props.skeleton) {
+      if (!components[component.id].props.skeleton) {
         const elem = document.createElement("div");
         elem.innerHTML = sanitize(components[component.id].props.render());
         components[component.id].props.skeleton = createSkeleton(elem.firstElementChild);

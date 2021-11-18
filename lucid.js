@@ -39,6 +39,8 @@
 
 class Lucid {
   constructor() {
+    const self = this;
+
     let components = {};
     let componentId = 0;
     let elements = [];
@@ -171,6 +173,32 @@ class Lucid {
 
     /**
      * 
+     * @param {Component} component 
+     * @param {number} key 
+     */
+    this.remove = function (component, key) {
+      const id = component.id;
+      const dom = elements[id][key].dom;
+
+      // Remove the component from the DOM
+      dom.parentNode.removeChild(dom);
+
+      // Remove all children components
+      const childrenCount = elements[id][key].children.length;
+      for (let i = 0; i < childrenCount; ++i) {
+        const child = elements[id][key].children[i];
+        remove(child.id, child.key);
+      }
+
+      // Call "disconnected" hook if exists
+      elements[id][key].h_disconnected && elements[id][key].h_disconnected();
+
+      // Delete it from the elements
+      delete elements[id][key];
+    }
+
+    /**
+     * 
      * @param {HTMLElement} dom 
      * @param {Skeleton | string} skeleton 
      * @param {number} componentId 
@@ -207,8 +235,7 @@ class Lucid {
 
       // Get "lucid-ref" attribute, if exists, set the ref of the dom on the element
       const ref = elem.getAttribute("lucid-ref");
-      if (ref)
-        elements[componentId][componentKey].refs[ref] = elem;
+      if (ref) elements[componentId][componentKey].refs[ref] = elem;
 
       // Get 2 lucid attributes, "lucid-id" and "lucid-key"
       const lucidId = elem.getAttribute("lucid-id");
@@ -217,7 +244,7 @@ class Lucid {
       // If component id and key are present in the node, it's a lucid component
       if (lucidId || lucidKey) {
         const newElem = document.createElement("div");
-        render(newElem, { id: lucidId }, lucidKey);
+        self.render(newElem, { id: lucidId }, lucidKey);
         dom.replaceChild(newElem.firstChild, elem);
       }
     }
@@ -253,32 +280,6 @@ class Lucid {
           updateComponent(childNodes[i], skeleton.children[i], componentId, componentKey);
         }
       }
-    }
-
-    /**
-     * 
-     * @param {Component} component 
-     * @param {number} key 
-     */
-    function remove(component, key) {
-      const id = component.id;
-      const dom = elements[id][key].dom;
-
-      // Remove the component from the DOM
-      dom.parentNode.removeChild(dom);
-
-      // Remove all children components
-      const childrenCount = elements[id][key].children.length;
-      for (let i = 0; i < childrenCount; ++i) {
-        const child = elements[id][key].children[i];
-        remove(child.id, child.key);
-      }
-
-      // Call "disconnected" hook if exists
-      elements[id][key].h_disconnected && elements[id][key].h_disconnected();
-
-      // Delete it from the elements
-      delete elements[id][key];
     }
 
     /**
@@ -333,7 +334,7 @@ class Lucid {
       for (let i = 0; i < childNodes.length; ++i) {
         const childSkeleton = createSkeleton(childNodes[i]);
 
-        if (childSkeleton !== null)
+        if (childSkeleton)
           skeleton.children.push(childSkeleton);
       }
 

@@ -213,7 +213,14 @@ class Lucid {
         return;
       }
 
-      const elem = document.createElement(skeleton.tag);
+      /** @type {HTMLElement} */
+      let elem;
+
+      // Fix for svg's, they won't show up if not created with createElementNS
+      if (skeleton.tag === "svg" || skeleton.tag === "path")
+        elem = document.createElementNS("http://www.w3.org/2000/svg", skeleton.tag);
+      else
+        elem = document.createElement(skeleton.tag);
 
       for (const key in skeleton.attrs) {
         let result;

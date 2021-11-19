@@ -1,20 +1,19 @@
 /**
  * @typedef {object} Component
  * @property {number} id
- * @property {object} attributes 
- * @property {object} state 
+ * @property {() => any} attributes 
+ * @property {() => any} state 
  * @property {Object<string, function>} methods 
  * @property {Hooks} hooks 
  * @property {Object<string, (oldValue: any, newValue: any) => any} watch 
- * @property {object} props
- * @property {Skeleton} props.skeleton
- * @property {() => string} props.render 
+ * @property {Skeleton} skeleton
+ * @property {() => string} render 
  */
 
 /**
  * @typedef {object} ComponentProperties
- * @property {object} attributes 
- * @property {object} state 
+ * @property {() => any} attributes 
+ * @property {() => any} state 
  * @property {Object<string, function>} methods 
  * @property {() => string} render 
  * @property {Hooks} hooks 
@@ -58,10 +57,8 @@ class Lucid {
         methods: props.methods,
         hooks: props.hooks,
         watch: props.watch,
-        props: {
-          skeleton: undefined,
-          render: props.render
-        }
+        skeleton: undefined,
+        render: props.render
       };
 
       // Initialize component in the elements array
@@ -80,17 +77,17 @@ class Lucid {
      */
     this.render = function (dom, component, key, attributes, settings) {
       // Check if component has it's skeleton created, if not, create it's skeleton
-      if (!components[component.id].props.skeleton) {
+      if (!components[component.id].skeleton) {
         const elem = document.createElement("div");
-        elem.innerHTML = sanitize(components[component.id].props.render());
-        components[component.id].props.skeleton = createSkeleton(elem.firstElementChild);
+        elem.innerHTML = sanitize(components[component.id].render());
+        components[component.id].skeleton = createSkeleton(elem.firstElementChild);
       }
 
       elements[component.id][key] = {
         id: component.id,
         key: key,
-        state: components[component.id].state,
-        attributes: components[component.id].attributes,
+        state: components[component.id].state && components[component.id].state(),
+        attributes: components[component.id].attributes && components[component.id].attributes(),
         methods: {},
         watch: {},
         hooks: {},
@@ -103,7 +100,7 @@ class Lucid {
           else if (typeof value === "object")
             this.state = value;
 
-          updateComponent(this.dom, components[this.id].props.skeleton, this.id, this.key);
+          updateComponent(this.dom, components[this.id].skeleton, this.id, this.key);
 
           // Call "updated" hook if exists
           elements[component.id][key].h_updated && elements[component.id][key].h_updated()
@@ -142,7 +139,7 @@ class Lucid {
       elements[component.id][key].h_created && elements[component.id][key].h_created();
 
       let elem = document.createElement("div");
-      connectComponent(elem, components[component.id].props.skeleton, component.id, key);
+      connectComponent(elem, components[component.id].skeleton, component.id, key);
       elem = elem.firstChild;
 
       // Render the component to the appropriate position

@@ -249,10 +249,11 @@ class Lucid {
       const lucidKey = elem.getAttribute("lucid-key");
 
       // If component id and key are present in the node, it's a lucid component
-      if (lucidId || lucidKey) {
-        const newElem = document.createElement("div");
-        self.render(newElem, { id: lucidId }, lucidKey);
-        dom.replaceChild(newElem.firstChild, elem);
+      if (lucidId && lucidKey) {
+        // HOPE IT DOESN'T BREAK :)
+        elem.removeAttribute("lucid-id");
+        elem.removeAttribute("lucid-key");
+        self.render(elem, components[lucidId], lucidKey);
       }
     }
 

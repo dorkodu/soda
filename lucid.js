@@ -247,7 +247,7 @@ class Lucid {
 
       // If component id and key are present in the node, it's a lucid component
       if (lucidId && lucidKey) {
-        // HOPE IT DOESN'T BREAK :)
+        // IT DID BREAK : (
         elem.removeAttribute("lucid-id");
         elem.removeAttribute("lucid-key");
         self.render(elem, components[lucidId], lucidKey);

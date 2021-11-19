@@ -288,7 +288,7 @@ class Lucid {
      * @param {number} key 
      * @returns 
      */
-    function instance(component, key) {
+    this.instance = function (component, key) {
       return {
         attribute: function (attribute, value) {
           if (value) {
@@ -400,7 +400,7 @@ class Lucid {
      * @returns 
      */
     function desanitize(string) {
-      return string.replace("srcname=", "src=");
+      return string.replace("srcname", "src");
     }
   }
 }

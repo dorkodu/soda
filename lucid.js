@@ -232,7 +232,7 @@ class Lucid {
       let elem;
 
       // Fix for svg's, they won't show up if not created with createElementNS
-      if (skeleton.tag === "svg" || skeleton.tag === "path")
+      if (isSvgTag(skeleton.tag))
         elem = document.createElementNS("http://www.w3.org/2000/svg", skeleton.tag);
       else
         elem = document.createElement(skeleton.tag);
@@ -406,6 +406,10 @@ class Lucid {
       }
 
       return text;
+    }
+
+    function isSvgTag(tag) {
+      return tag === "svg" || tag === "path" || tag === "polyline";
     }
 
     /**

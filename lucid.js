@@ -139,7 +139,7 @@ class Lucid {
       elements[component.id][key].h_created && elements[component.id][key].h_created();
 
       let elem = document.createElement("div");
-      connectComponent(elem, components[component.id].skeleton, component.id, key);
+      connectComponent(elem, components[component.id].skeleton, component.id, key, false);
       elem = elem.firstChild;
 
       // Render the component to the appropriate position
@@ -202,7 +202,7 @@ class Lucid {
      * @param {number} componentKey 
      * @returns 
      */
-    function connectComponent(dom, skeleton, componentId, componentKey) {
+    function connectComponent(dom, skeleton, componentId, componentKey, isSvg) {
       // Get 2 lucid attributes, "lucid-id" and "lucid-key"
       const lucidId = typeof skeleton !== "string" && skeleton.attrs["lucid-id"];
       const lucidKey = typeof skeleton !== "string" && skeleton.attrs["lucid-key"];
@@ -232,10 +232,13 @@ class Lucid {
       let elem;
 
       // Fix for svg's, they won't show up if not created with createElementNS
-      if (isSvgTag(skeleton.tag))
+      if (isSvg || skeleton.tag === "svg") {
         elem = document.createElementNS("http://www.w3.org/2000/svg", skeleton.tag);
-      else
+        isSvg = true;
+      }
+      else {
         elem = document.createElement(skeleton.tag);
+      }
 
       for (const key in skeleton.attrs) {
         let result;
@@ -251,7 +254,7 @@ class Lucid {
       }
 
       for (let i = 0; i < skeleton.children.length; ++i)
-        connectComponent(elem, skeleton.children[i], componentId, componentKey);
+        connectComponent(elem, skeleton.children[i], componentId, componentKey, isSvg);
 
       dom.appendChild(elem);
 
@@ -406,10 +409,6 @@ class Lucid {
       }
 
       return text;
-    }
-
-    function isSvgTag(tag) {
-      return tag === "svg" || tag === "path" || tag === "polyline";
     }
 
     /**

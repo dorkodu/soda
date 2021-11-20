@@ -404,7 +404,7 @@ class Lucid {
           if (isEvent)
             return elements[id][key]["m_" + properties[1]].bind(elements[id][key]);
           else
-            return elements[id][key]["m_" + properties[1]]();
+            text = text.replace("{{" + variables[i] + "}}", elements[id][key]["m_" + properties[1]]())
         }
       }
 

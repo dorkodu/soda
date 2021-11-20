@@ -109,15 +109,15 @@ class Lucid {
 
       for (const methodKey in components[component.id].methods) {
         elements[component.id][key]["m_" + methodKey] = components[component.id].methods[methodKey];
-        elements[component.id][key].methods[methodKey] = (...args) => { elements[component.id][key]["m_" + methodKey](...args); }
+        elements[component.id][key].methods[methodKey] = (...args) => elements[component.id][key]["m_" + methodKey](...args);
       }
       for (const watchKey in components[component.id].watch) {
         elements[component.id][key]["w_" + watchKey] = components[component.id].watch[watchKey];
-        elements[component.id][key].watch[watchKey] = (...args) => { elements[component.id][key]["w_" + watchKey](...args); }
+        elements[component.id][key].watch[watchKey] = (...args) => elements[component.id][key]["w_" + watchKey](...args);
       }
       for (const hooksKey in components[component.id].hooks) {
         elements[component.id][key]["h_" + hooksKey] = components[component.id].hooks[hooksKey];
-        elements[component.id][key].hooks[hooksKey] = (...args) => { elements[component.id][key]["h_" + hooksKey](...args); }
+        elements[component.id][key].hooks[hooksKey] = (...args) => elements[component.id][key]["h_" + hooksKey](...args);
       }
 
       // Find the parent of the current component that's being rendered

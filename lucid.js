@@ -174,7 +174,7 @@ class Lucid {
      * @param {number} key 
      */
     this.remove = function (component, key) {
-      const id = component.id;
+      const id = typeof component === "number" ? component : component.id;
       const dom = elements[id][key].dom;
 
       // Remove the component from the DOM

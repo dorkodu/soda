@@ -100,7 +100,7 @@ class Lucid {
           else if (typeof value === "object")
             this.state = value;
 
-          updateComponent(this.dom, components[this.id].skeleton, this.id, this.key);
+          updateComponent(this.dom, components[this.id].skeleton, this.id, this.key, true);
 
           // Call "updated" hook if exists
           elements[component.id][key].h_updated && elements[component.id][key].h_updated()
@@ -268,7 +268,7 @@ class Lucid {
      * @param {number} componentKey 
      * @returns 
      */
-    function updateComponent(dom, skeleton, componentId, componentKey) {
+    function updateComponent(dom, skeleton, componentId, componentKey, isParent) {
       if (typeof skeleton === "string") {
         const result = convertTextVariables(skeleton, componentId, componentKey);
         if (result !== dom.nodeValue) dom.nodeValue = result;
@@ -284,11 +284,23 @@ class Lucid {
         }
       }
 
+      let childrenId = 0;
       const childNodes = Array.from(dom.childNodes);
-      for (let i = 0; i < childNodes.length; ++i) {
+      for (let i = 0, skeletonId = 0; i < childNodes.length; ++i, ++skeletonId) {
+        if (childNodes[i].nodeType === document.ELEMENT_NODE) {
+          if (!isParent && dom.children.length > childrenId
+            && dom.children[childrenId].getAttribute("lucid-id")
+            && dom.children[childrenId].getAttribute("lucid-key")) {
+            skeletonId--;
+            childrenId++;
+            continue;
+          }
+          childrenId++;
+        }
+
         // Check also if there is a skeleton for the dom child
-        if (skeleton.children[i]) {
-          updateComponent(childNodes[i], skeleton.children[i], componentId, componentKey);
+        if (skeleton.children[skeletonId]) {
+          updateComponent(childNodes[i], skeleton.children[skeletonId], componentId, componentKey, false);
         }
       }
     }

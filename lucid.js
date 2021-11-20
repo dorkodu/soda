@@ -184,7 +184,7 @@ class Lucid {
       const childrenCount = elements[id][key].children.length;
       for (let i = 0; i < childrenCount; ++i) {
         const child = elements[id][key].children[i];
-        remove(child.id, child.key);
+        this.remove(child.id, child.key);
       }
 
       // Call "disconnected" hook if exists

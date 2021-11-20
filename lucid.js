@@ -203,6 +203,24 @@ class Lucid {
      * @returns 
      */
     function connectComponent(dom, skeleton, componentId, componentKey) {
+      // Get 2 lucid attributes, "lucid-id" and "lucid-key"
+      const lucidId = typeof skeleton !== "string" && skeleton.attrs["lucid-id"];
+      const lucidKey = typeof skeleton !== "string" && skeleton.attrs["lucid-key"];
+
+      // If component id and key are present in the node, it's a lucid component
+      if (lucidId && lucidKey) {
+        // Render the component into a container
+        const container = document.createElement("div");
+        self.render(container, components[lucidId], lucidKey);
+
+        // Key might be a variable(state, attributes or methods), so convert it's text to variable
+        container.firstElementChild.setAttribute("lucid-key", convertTextVariables(lucidKey, componentId, componentKey));
+
+        // Append the component in the container to the DOM
+        dom.appendChild(container.firstElementChild);
+        return;
+      }
+
       // If skeleton is a string, it's a text node that is the only child
       if (typeof skeleton === "string") {
         const textNode = document.createTextNode(convertTextVariables(skeleton, componentId, componentKey, false));
@@ -240,18 +258,6 @@ class Lucid {
       // Get "lucid-ref" attribute, if exists, set the ref of the dom on the element
       const ref = elem.getAttribute("lucid-ref");
       if (ref) elements[componentId][componentKey].refs[ref] = elem;
-
-      // Get 2 lucid attributes, "lucid-id" and "lucid-key"
-      const lucidId = elem.getAttribute("lucid-id");
-      const lucidKey = elem.getAttribute("lucid-key");
-
-      // If component id and key are present in the node, it's a lucid component
-      if (lucidId && lucidKey) {
-        // IT DID BREAK : (
-        elem.removeAttribute("lucid-id");
-        elem.removeAttribute("lucid-key");
-        self.render(elem, components[lucidId], lucidKey);
-      }
     }
 
     /**

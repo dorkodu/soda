@@ -315,6 +315,8 @@ class Lucid {
      * @returns 
      */
     this.instance = function (component, key) {
+      if (!elements[component.id][key]) return;
+
       return {
         attribute: function (attribute, value) {
           if (value) {

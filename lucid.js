@@ -249,7 +249,8 @@ class Lucid {
         }
         else {
           result = convertTextVariables(skeleton.attrs[key], componentId, componentKey, false);
-          elem.setAttribute(desanitize(key), result);
+          if (result !== "")
+            elem.setAttribute(desanitize(key), result);
         }
       }
 
@@ -283,7 +284,7 @@ class Lucid {
         // because only {{state.*}} attributes can change
         if (!key.startsWith("on")) {
           const result = convertTextVariables(skeleton.attrs[key], componentId, componentKey);
-          if (dom.getAttribute(key) !== result) dom.setAttribute(key, result);
+          if (dom.getAttribute(key) !== result && result !== "") dom.setAttribute(key, result);
         }
       }
 
@@ -400,7 +401,10 @@ class Lucid {
           for (let j = 0; j < properties.length; ++j)
             tempObj = tempObj[properties[j]];
 
-          text = text.replace("{{" + variables[i] + "}}", tempObj);
+          if (tempObj !== undefined)
+            text = text.replace("{{" + variables[i] + "}}", tempObj);
+          else
+            text = text.replace("{{" + variables[i] + "}}", "");
         }
         else if (properties[0] === "methods") {
           if (isEvent)

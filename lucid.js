@@ -319,7 +319,7 @@ class Lucid {
 
       return {
         attribute: function (attribute, value) {
-          if (value) {
+          if (value !== undefined) {
             const oldValue = elements[component.id][key].attributes[attribute];
             elements[component.id][key].attributes[attribute] = value;
 

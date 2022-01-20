@@ -1,0 +1,10 @@
+*package-log.json
+*rollup.config.js
+*tsconfig.json
+*.jest.config.js
+*.babelrc.js
+*.gitignore
+*.gitattributes
+test/
+src/
+node_modules/

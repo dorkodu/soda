@@ -1,20 +1,15 @@
 {
   "compilerOptions": {
-    "jsx": "react-jsx",
+    "jsx": "react",
+    "module": "ESNext", 
     "target": "ESNext",
-    "module": "ESNext",
     "moduleResolution": "Node",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "skipLibCheck": true,
-    "noEmitOnError": false,
-    "outDir": "./lib",
-    "rootDir": "./src",
-    "typeRoots": ["node_modules/@types/"]
+    "declaration": true, 
+    "outDir": "lib",
+    "rootDir": "src",
+    "declarationDir": "",
+    "reactNamespace": "lucid",
   },
-  "exclude": [
-    "node_modules",
-    "test"
-  ]
+  "include":["src/**/*"] 
 }

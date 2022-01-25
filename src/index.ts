@@ -1,75 +1,63 @@
 import { translate } from "./translation";
 
 interface LucidElement {
-  tag: keyof HTMLElementTagNameMap | ((props: { [key: string]: any }) => LucidElement);
-  props: { [key: string]: any };
+  tag: keyof HTMLElementTagNameMap | ((props: { [key: string]: any }, state: any) => LucidElement),
+  attrs: { [key: string]: any };
   children: string | any[];
 }
 
 
 class Lucid {
-  private id: number = 1000000;
-  private state: any;
-
   createElement(
-    tag: keyof HTMLElementTagNameMap | ((props: { [key: string]: any }) => LucidElement),
-    props: { [key: string]: any },
+    tag: keyof HTMLElementTagNameMap | ((props: { [key: string]: any }, state: any) => LucidElement),
+    attrs: { [key: string]: any },
     ...children: any
   ): LucidElement {
-    return { tag, props, children };
+    return { tag, attrs, children };
   }
 
   render(dom: HTMLElement, element: LucidElement) {
-    this.state = new Proxy(element.props.state, {
-      set: (target, prop, value) => {
-        target[prop] = value;
+    if (typeof element.tag === "function") {
+      let proxy = undefined as any;
+      const state = (value: any) => {
+        if (proxy !== undefined) return proxy;
+        proxy = new Proxy({ ...value } as any, {
+          set: (target, prop, value) => {
+            target[prop] = value;
 
-        if (prop !== "length" && prop !== "_id" && prop !== "_dom") {
-          console.log("Re-render");
-          this._rerender(target["_dom"], target["_id"]({ state: target }));
-        }
+            if (prop !== "length") {
+              console.log("Re-render");
+              if (typeof element.tag === "function")
+                this._update(dom.firstChild as HTMLElement, element.tag(element.attrs, state));
+            }
 
-        return true;
-      },
-      deleteProperty: (target, prop) => {
-        console.log("Re-render");
-        delete target[prop];
-        return true;
+            return true;
+          }
+        })
+
+        return proxy
       }
-    });
-    element.props.state = this.state;
-
-    this._render(dom, element);
-
-    return this.state;
+      this._render(dom, element.tag(element.attrs, state));
+    }
   }
 
   _render(dom: HTMLElement, element: LucidElement) {
-    const state = element.props.state;
-
-    if (typeof element.tag === "function") {
-      state["_id"] = element.tag;
-      element = element.tag(element.props);
-    }
-    else {
-
-    }
-
     const elem = document.createElement(element.tag as keyof HTMLElementTagNameMap);
-    state["_dom"] = elem;
 
-    for (const key in element.props) {
+    for (const key in element.attrs) {
       if (key.startsWith("on")) {
-        elem.addEventListener(key.substring(2).toLocaleLowerCase(), (ev) => element.props[key](ev))
+        elem.addEventListener(key.substring(2).toLocaleLowerCase(), (ev) => element.attrs[key](ev))
       }
       else {
-        elem.setAttribute(translate(key), element.props[key]);
+        elem.setAttribute(translate(key), element.attrs[key]);
       }
     }
 
     for (let i = 0; i < element.children.length; ++i) {
       if (typeof element.children[i] === "object")
         this._render(elem, element.children[i]);
+      else if (typeof element.tag === "function")
+        this.render(elem, element.children[i]);
       else
         elem.appendChild(document.createTextNode(element.children[i]));
     }
@@ -77,7 +65,7 @@ class Lucid {
     dom.appendChild(elem);
   }
 
-  _rerender(dom: HTMLElement, element: LucidElement) {
+  _update(dom: HTMLElement, element: LucidElement) {
     if (dom.tagName.toLowerCase() !== element.tag) {
       // TODO: Diff
       console.log("TODO: Diff");
@@ -87,6 +75,9 @@ class Lucid {
 
     for (let i = 0; i < element.children.length; ++i) {
       if (typeof element.children[i] === "object")
+        this._update(dom.children[i] as HTMLElement, element.children[i]);
+      //console.log("TODO: Handle dom children re-render")
+      else if (typeof element.children[i] === "function")
         console.log("TODO: Handle element children re-render")
       else
         if (dom.childNodes[i].nodeValue !== element.children[i])

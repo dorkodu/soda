@@ -1,7 +1,7 @@
 interface LucidElement {
     tag: keyof HTMLElementTagNameMap | ((props: {
         [key: string]: any;
-    }, state: any) => LucidElement);
+    }, state: any, update: any) => LucidElement);
     attrs: {
         [key: string]: any;
     };
@@ -10,7 +10,7 @@ interface LucidElement {
 declare class Lucid {
     createElement(tag: keyof HTMLElementTagNameMap | ((props: {
         [key: string]: any;
-    }, state: any) => LucidElement), attrs: {
+    }, state: any, update: any) => LucidElement), attrs: {
         [key: string]: any;
     }, ...children: any): LucidElement;
     render(dom: HTMLElement, element: LucidElement): void;

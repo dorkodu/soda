@@ -1,4 +1,4 @@
-![Lucid logo](lucid-logo-dark-s.png)
+![Lucid logo](res/lucid-logo-dark-s.png)
 
 # Lucid
 

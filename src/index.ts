@@ -1,15 +1,14 @@
 import { translate } from "./translation";
 
 interface LucidElement {
-  tag: keyof HTMLElementTagNameMap | ((props: { [key: string]: any }, state: any, update: any) => LucidElement),
+  tag: keyof HTMLElementTagNameMap | ((component: any) => LucidElement),
   attrs: { [key: string]: any };
   children: string | any[];
 }
 
-
 class Lucid {
   createElement(
-    tag: keyof HTMLElementTagNameMap | ((props: { [key: string]: any }, state: any, update: any) => LucidElement),
+    tag: keyof HTMLElementTagNameMap | ((component: any) => LucidElement),
     attrs: { [key: string]: any },
     ...children: any
   ): LucidElement {
@@ -18,30 +17,14 @@ class Lucid {
 
   render(dom: HTMLElement, element: LucidElement) {
     if (typeof element.tag === "function") {
-      let proxy = undefined as any;
-      const update = () => {
-        if (typeof element.tag === "function")
-          this._update(dom.firstChild as HTMLElement, element.tag(element.attrs, state, update))
-      }
-      const state = (value: any) => {
-        if (proxy !== undefined) return proxy;
-        proxy = new Proxy({ ...value } as any, {
-          set: (target, prop, value) => {
-            target[prop] = value;
-
-            if (prop !== "length") {
-              console.log("Re-render");
-              if (typeof element.tag === "function")
-                update();
-            }
-
-            return true;
-          }
-        })
-
-        return proxy
-      }
-      this._render(dom, element.tag(element.attrs, state, update));
+      const component = {
+        attrs: element.attrs,
+        update: () => {
+          if (typeof element.tag === "function")
+            this._update(dom.firstChild as HTMLElement, element.tag(component))
+        }
+      };
+      this._render(dom, element.tag(component));
     }
   }
 

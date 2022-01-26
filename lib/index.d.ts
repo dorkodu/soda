@@ -1,16 +1,12 @@
 interface LucidElement {
-    tag: keyof HTMLElementTagNameMap | ((props: {
-        [key: string]: any;
-    }, state: any, update: any) => LucidElement);
+    tag: keyof HTMLElementTagNameMap | ((component: any) => LucidElement);
     attrs: {
         [key: string]: any;
     };
     children: string | any[];
 }
 declare class Lucid {
-    createElement(tag: keyof HTMLElementTagNameMap | ((props: {
-        [key: string]: any;
-    }, state: any, update: any) => LucidElement), attrs: {
+    createElement(tag: keyof HTMLElementTagNameMap | ((component: any) => LucidElement), attrs: {
         [key: string]: any;
     }, ...children: any): LucidElement;
     render(dom: HTMLElement, element: LucidElement): void;

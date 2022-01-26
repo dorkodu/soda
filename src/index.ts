@@ -7,7 +7,20 @@ interface LucidElement {
 }
 
 class Lucid {
-  createElement(
+  local(value: any, container: any, cb: any) {
+    if (container.state) return container.state;
+    const proxy = new Proxy(value, {
+      set: (t, p, v) => {
+        t[p] = v;
+        if (p !== "length") cb();
+        return true;
+      }
+    })
+    container.state = proxy;
+    return proxy;
+  }
+
+  private createElement(
     tag: keyof HTMLElementTagNameMap | ((component: any) => LucidElement),
     attrs: { [key: string]: any },
     ...children: any
@@ -28,7 +41,7 @@ class Lucid {
     }
   }
 
-  _render(dom: HTMLElement, element: LucidElement) {
+  private _render(dom: HTMLElement, element: LucidElement) {
     const elem = document.createElement(element.tag as keyof HTMLElementTagNameMap);
 
     for (const key in element.attrs) {
@@ -52,7 +65,7 @@ class Lucid {
     dom.appendChild(elem);
   }
 
-  _update(dom: HTMLElement, element: LucidElement) {
+  private _update(dom: HTMLElement, element: LucidElement) {
     if (dom.tagName.toLowerCase() !== element.tag) {
       // TODO: Diff
       console.log("TODO: Diff");
@@ -63,7 +76,6 @@ class Lucid {
     for (let i = 0; i < element.children.length; ++i) {
       if (typeof element.children[i] === "object")
         this._update(dom.children[i] as HTMLElement, element.children[i]);
-      //console.log("TODO: Handle dom children re-render")
       else if (typeof element.children[i] === "function")
         console.log("TODO: Handle element children re-render")
       else

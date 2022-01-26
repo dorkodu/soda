@@ -6,12 +6,11 @@ interface LucidElement {
     children: string | any[];
 }
 declare class Lucid {
-    createElement(tag: keyof HTMLElementTagNameMap | ((component: any) => LucidElement), attrs: {
-        [key: string]: any;
-    }, ...children: any): LucidElement;
+    local(value: any, container: any, cb: any): any;
+    private createElement;
     render(dom: HTMLElement, element: LucidElement): void;
-    _render(dom: HTMLElement, element: LucidElement): void;
-    _update(dom: HTMLElement, element: LucidElement): void;
+    private _render;
+    private _update;
 }
 export declare const lucid: Lucid;
 export {};

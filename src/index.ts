@@ -35,6 +35,7 @@ class Lucid {
         update: () => {
           if (typeof element.tag === "function")
             this._update(dom.firstChild as HTMLElement, element.tag(component))
+          // TODO: "dom.firstChild" fix this shit asap!
         }
       };
       this._render(dom, element.tag(component));
@@ -54,10 +55,10 @@ class Lucid {
     }
 
     for (let i = 0; i < element.children.length; ++i) {
-      if (typeof element.children[i] === "object")
-        this._render(elem, element.children[i]);
-      else if (typeof element.tag === "function")
+      if (typeof element.children[i].tag === "function")
         this.render(elem, element.children[i]);
+      else if (typeof element.children[i] === "object")
+        this._render(elem, element.children[i]);
       else
         elem.appendChild(document.createTextNode(element.children[i]));
     }

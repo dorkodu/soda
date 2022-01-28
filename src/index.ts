@@ -34,16 +34,17 @@ class Lucid {
         attrs: element.attrs,
         update: () => {
           if (typeof element.tag === "function")
-            this._update(dom.firstChild as HTMLElement, element.tag(component))
-          // TODO: "dom.firstChild" fix this shit asap!
-        }
+            this._update(component.__dom as unknown as HTMLElement, element.tag(component))
+        },
+        __dom: undefined
       };
-      this._render(dom, element.tag(component));
+      this._render(dom, element.tag(component), component);
     }
   }
 
-  private _render(dom: HTMLElement, element: LucidElement) {
+  private _render(dom: HTMLElement, element: LucidElement, component: any) {
     const elem = document.createElement(element.tag as keyof HTMLElementTagNameMap);
+    if (component) component.__dom = elem;
 
     for (const key in element.attrs) {
       if (key.startsWith("on")) {
@@ -58,7 +59,7 @@ class Lucid {
       if (typeof element.children[i].tag === "function")
         this.render(elem, element.children[i]);
       else if (typeof element.children[i] === "object")
-        this._render(elem, element.children[i]);
+        this._render(elem, element.children[i], undefined);
       else
         elem.appendChild(document.createTextNode(element.children[i]));
     }

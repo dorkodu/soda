@@ -35,6 +35,7 @@ class Lucid {
         update: () => {
           if (typeof element.tag === "function")
             this._update(component.__dom as unknown as HTMLElement, element.tag(component))
+
         },
         __dom: undefined
       };
@@ -62,6 +63,7 @@ class Lucid {
         this._render(elem, element.children[i], undefined);
       else
         elem.appendChild(document.createTextNode(element.children[i]));
+
     }
 
     dom.appendChild(elem);
@@ -76,13 +78,16 @@ class Lucid {
     // TODO: Property diff
 
     for (let i = 0; i < element.children.length; ++i) {
-      if (typeof element.children[i] === "object")
-        this._update(dom.children[i] as HTMLElement, element.children[i]);
-      else if (typeof element.children[i] === "function")
+      if (typeof element.children[i] === "object") {
+        this._update(dom.childNodes[i] as HTMLElement, element.children[i]);
+      }
+      else if (typeof element.children[i] === "function") {
         console.log("TODO: Handle element children re-render")
-      else
+      }
+      else {
         if (dom.childNodes[i].nodeValue !== element.children[i])
           dom.childNodes[i].nodeValue = element.children[i];
+      }
     }
   }
 }

@@ -77,7 +77,8 @@ class Lucid {
     // TODO: Property diff
 
     for (let i = 0; i < element.children.length || i < dom.childNodes.length; ++i) {
-      if (!element.children[i]) { dom.removeChild(dom.childNodes[i--]) }
+      // Remove the excess amount of children
+      if (!element.children[i]) { dom.removeChild(dom.childNodes[i--]); continue; }
 
       if (typeof element.children[i] === "object") {
         this._update(dom.childNodes[i] as HTMLElement, element.children[i]);
@@ -86,8 +87,20 @@ class Lucid {
         console.log("TODO: Handle element children re-render")
       }
       else {
-        if (dom.childNodes[i].nodeValue !== element.children[i])
+        // DOM type is an element but the element child is a text node
+        if (dom.childNodes[i].nodeType === document.ELEMENT_NODE) {
+          dom.removeChild(dom.childNodes[i]);
+
+          if (dom.childNodes.length > 1 && dom.childNodes[i])
+            dom.insertBefore(document.createTextNode(element.children[i]), dom.childNodes[i])
+          else
+            dom.appendChild(document.createTextNode(element.children[i]));
+
+          i--;
+        }
+        else if (dom.childNodes[i].nodeValue !== element.children[i]) {
           dom.childNodes[i].nodeValue = element.children[i];
+        }
       }
     }
   }

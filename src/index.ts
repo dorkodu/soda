@@ -35,7 +35,6 @@ class Lucid {
         update: () => {
           if (typeof element.tag === "function")
             this._update(component.__dom as unknown as HTMLElement, element.tag(component))
-
         },
         __dom: undefined
       };
@@ -77,7 +76,9 @@ class Lucid {
 
     // TODO: Property diff
 
-    for (let i = 0; i < element.children.length; ++i) {
+    for (let i = 0; i < element.children.length || i < dom.childNodes.length; ++i) {
+      if (!element.children[i]) { dom.removeChild(dom.childNodes[i--]) }
+
       if (typeof element.children[i] === "object") {
         this._update(dom.childNodes[i] as HTMLElement, element.children[i]);
       }

@@ -88,13 +88,10 @@ class Lucid {
 
     for (let i = 0; i < element.children.length || i < dom.childNodes.length; ++i) {
       // Remove the excess amount of children
-      if (!element.children[i]) { dom.removeChild(dom.childNodes[i--]); continue; }
-
-      console.log(dom.childNodes[i]);
-      console.log(element.children[i]);
+      if (element.children[i] === undefined) { dom.removeChild(dom.childNodes[i--]); continue; }
 
       if (typeof element.children[i] === "object") {
-        if (!dom.childNodes[i]) {
+        if (dom.childNodes[i] === undefined) {
           dom.appendChild(document.createElement(element.children[i].tag));
         }
         else if (dom.childNodes[i].nodeType !== document.ELEMENT_NODE) {
@@ -107,7 +104,7 @@ class Lucid {
         console.log("TODO: Handle element children re-render")
       }
       else {
-        if (!dom.childNodes[i]) {
+        if (dom.childNodes[i] === undefined) {
           dom.appendChild(document.createTextNode(element.children[i]));
         }
         else if (dom.childNodes[i].nodeType !== document.TEXT_NODE)

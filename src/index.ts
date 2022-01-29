@@ -34,10 +34,12 @@ class Lucid {
         attrs: element.attrs,
         update: () => {
           if (typeof element.tag === "function") {
+            console.time("a")
             const newDOM = component.__dom.cloneNode(true);
             component.__dom.parentNode?.replaceChild(newDOM, component.__dom);
             component.__dom = newDOM as HTMLElement;
             this._update(component.__dom as unknown as HTMLElement, element.tag(component))
+            console.timeEnd("a")
           }
         },
         __dom: undefined as unknown as HTMLElement
@@ -90,7 +92,10 @@ class Lucid {
       // Remove the excess amount of children
       if (element.children[i] === undefined) { dom.removeChild(dom.childNodes[i--]); continue; }
 
-      if (typeof element.children[i] === "object") {
+      if (typeof element.children[i].tag === "function") {
+        console.log("TODO: Handle element children re-render")
+      }
+      else if (typeof element.children[i] === "object") {
         if (dom.childNodes[i] === undefined) {
           dom.appendChild(document.createElement(element.children[i].tag));
         }
@@ -99,9 +104,6 @@ class Lucid {
         }
 
         this._update(dom.childNodes[i] as HTMLElement, element.children[i]);
-      }
-      else if (typeof element.children[i] === "function") {
-        console.log("TODO: Handle element children re-render")
       }
       else {
         if (dom.childNodes[i] === undefined) {

@@ -35,6 +35,7 @@ class Lucid {
         update: () => {
           if (typeof element.tag === "function") {
             console.time("a")
+            // TODO: Remove this
             const newDOM = component.__dom.cloneNode(true);
             component.__dom.parentNode?.replaceChild(newDOM, component.__dom);
             component.__dom = newDOM as HTMLElement;
@@ -74,6 +75,11 @@ class Lucid {
   }
 
   private _update(dom: HTMLElement, element: LucidElement) {
+    if (dom.tagName.toLowerCase() !== element.tag) {
+      // TODO: Diff
+      console.log("TODO: Diff");
+    }
+
     for (const key in element.attrs) {
       if (key.startsWith("on")) {
         dom.addEventListener(key.substring(2).toLowerCase(), (ev) => element.attrs[key](ev))

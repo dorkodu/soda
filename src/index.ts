@@ -93,7 +93,15 @@ class Lucid {
       if (element.children[i] === undefined) { dom.removeChild(dom.childNodes[i--]); continue; }
 
       if (typeof element.children[i].tag === "function") {
-        console.log("TODO: Handle element children re-render")
+        const container = document.createElement("div");
+        this.render(container, element.children[i]);
+
+        if (dom.childNodes[i] === undefined) {
+          dom.appendChild(container.firstChild as HTMLElement);
+        }
+        else if (dom.childNodes[i].nodeType !== document.ELEMENT_NODE) {
+          dom.insertBefore(container.firstChild as HTMLElement, dom.childNodes[i]);
+        }
       }
       else if (typeof element.children[i] === "object") {
         if (dom.childNodes[i] === undefined) {

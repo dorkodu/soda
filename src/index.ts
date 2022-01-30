@@ -35,17 +35,17 @@ class Lucid {
         update: () => {
           if (typeof element.tag === "function") {
             console.time("a")
-            // TODO: Remove this
-            const newDOM = component.__dom.cloneNode(true);
-            component.__dom.parentNode?.replaceChild(newDOM, component.__dom);
-            component.__dom = newDOM as HTMLElement;
-            this._update(component.__dom as unknown as HTMLElement, element.tag(component))
+            const newElement = element.tag(component);
+            this._update(component.__dom, newElement, component.__element)
+            component.__element = newElement;
             console.timeEnd("a")
           }
         },
-        __dom: undefined as unknown as HTMLElement
+        __dom: undefined as unknown as HTMLElement,
+        __element: undefined as unknown as LucidElement
       };
-      this._render(dom, element.tag(component), component);
+      this._render(dom, (component.__element = element.tag(component)), component);
+      console.log(component.__element);
     }
   }
 
@@ -55,7 +55,7 @@ class Lucid {
 
     for (const key in element.attrs) {
       if (key.startsWith("on")) {
-        elem.addEventListener(key.substring(2).toLowerCase(), (ev) => element.attrs[key](ev))
+        elem.addEventListener(key.substring(2).toLowerCase(), element.attrs[key])
       }
       else {
         elem.setAttribute(translate(key), element.attrs[key]);
@@ -74,15 +74,30 @@ class Lucid {
     dom.appendChild(elem);
   }
 
-  private _update(dom: HTMLElement, element: LucidElement) {
+  private _update(dom: HTMLElement, element: LucidElement, oldElement: LucidElement) {
     if (dom.tagName.toLowerCase() !== element.tag) {
       // TODO: Diff
       console.log("TODO: Diff");
     }
 
-    for (const key in element.attrs) {
+    for (let key in oldElement.attrs) {
+      console.log("Old: " + key);
+
       if (key.startsWith("on")) {
-        dom.addEventListener(key.substring(2).toLowerCase(), (ev) => element.attrs[key](ev))
+        if (oldElement.attrs && oldElement.attrs[key]) {
+          dom.removeEventListener(key.substring(2).toLowerCase(), oldElement.attrs[key]);
+        }
+      }
+      else {
+        dom.removeAttribute(translate(key));
+      }
+    }
+
+    for (let key in element.attrs) {
+      console.log("New: " + key);
+      if (key.startsWith("on")) {
+        if (element.attrs && element.attrs[key])
+          dom.addEventListener(key.substring(2).toLowerCase(), element.attrs[key])
       }
       else {
         dom.setAttribute(translate(key), element.attrs[key]);
@@ -112,7 +127,7 @@ class Lucid {
           dom.insertBefore(document.createElement(element.children[i].tag), dom.childNodes[i]);
         }
 
-        this._update(dom.childNodes[i] as HTMLElement, element.children[i]);
+        this._update(dom.childNodes[i] as HTMLElement, element.children[i], oldElement.children[i]);
       }
       else {
         if (dom.childNodes[i] === undefined) {

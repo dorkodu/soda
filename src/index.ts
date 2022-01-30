@@ -99,7 +99,7 @@ class Lucid {
         if (dom.childNodes[i] === undefined) {
           dom.appendChild(container.firstChild as HTMLElement);
         }
-        else if (dom.childNodes[i].nodeType !== document.ELEMENT_NODE) {
+        else {
           dom.insertBefore(container.firstChild as HTMLElement, dom.childNodes[i]);
         }
       }

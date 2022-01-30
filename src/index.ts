@@ -80,7 +80,7 @@ class Lucid {
       console.log("TODO: Diff");
     }
 
-    for (let key in oldElement.attrs) {
+    for (let key in oldElement?.attrs) {
       console.log("Old: " + key);
 
       if (key.startsWith("on")) {
@@ -93,7 +93,7 @@ class Lucid {
       }
     }
 
-    for (let key in element.attrs) {
+    for (let key in element?.attrs) {
       console.log("New: " + key);
       if (key.startsWith("on")) {
         if (element.attrs && element.attrs[key])

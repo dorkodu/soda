@@ -9,15 +9,6 @@ interface LucidElement {
 class Lucid {
   private component: any;
 
-  local(value: any) {
-    const component = this.component;
-
-    return [
-      component.state || value,
-      (value: any) => { component.state = value; component.update(); }
-    ]
-  }
-
   private createElement(
     tag: keyof HTMLElementTagNameMap | ((component: any) => LucidElement),
     attrs: { [key: string]: any },

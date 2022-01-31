@@ -7,7 +7,6 @@ interface LucidElement {
 }
 declare class Lucid {
     private component;
-    local(value: any): any[];
     private createElement;
     render(dom: HTMLElement, element: LucidElement): void;
     private _render;

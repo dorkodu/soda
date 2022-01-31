@@ -45,7 +45,6 @@ class Lucid {
         __element: undefined as unknown as LucidElement
       };
       this._render(dom, (component.__element = element.tag(component)), component);
-      console.log(component.__element);
     }
   }
 
@@ -88,7 +87,7 @@ class Lucid {
           dom.removeEventListener(key.substring(2).toLowerCase(), oldElement.attrs[key], { capture: true });
         }
         //if (element?.attrs && element?.attrs[key]) {
-        //  dom.addEventListener(key.substring(2).toLowerCase(), element.attrs[key])
+        //  dom.addEventListener(key.substring(2).toLowerCase(), element.attrs[key], { capture: true })
         //  processed[key] = true;
         //}
       }

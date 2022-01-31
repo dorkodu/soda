@@ -7,17 +7,11 @@ interface LucidElement {
 }
 
 class Lucid {
-  local(value: any, container: any, cb: any) {
-    if (container.state) return container.state;
-    const proxy = new Proxy(value, {
-      set: (t, p, v) => {
-        t[p] = v;
-        if (p !== "length") cb();
-        return true;
-      }
-    })
-    container.state = proxy;
-    return proxy;
+  local(value: any, component: any) {
+    let setState = (value: any) => { component.state = value; component.update(); }
+    let state = component.state || value;
+
+    return [state, setState];
   }
 
   private createElement(
@@ -25,6 +19,11 @@ class Lucid {
     attrs: { [key: string]: any },
     ...children: any
   ): LucidElement {
+    for (let i = 0; i < children.length; ++i) {
+      if (Array.isArray(children[i]))
+        children.splice(i, 1, ...children[i]);
+    }
+
     return { tag, attrs, children };
   }
 
@@ -79,32 +78,18 @@ class Lucid {
       console.log("TODO: Diff");
     }
 
-    //const processed: { [key: string]: boolean } = {};
-
     for (let key in oldElement?.attrs) {
       if (key.startsWith("on")) {
         if (oldElement.attrs && oldElement.attrs[key]) {
           dom.removeEventListener(key.substring(2).toLowerCase(), oldElement.attrs[key], { capture: true });
         }
-        //if (element?.attrs && element?.attrs[key]) {
-        //  dom.addEventListener(key.substring(2).toLowerCase(), element.attrs[key], { capture: true })
-        //  processed[key] = true;
-        //}
       }
       else {
-        //if (element?.attrs[key]) {
-        //  dom.setAttribute(translate(key), element.attrs[key]);
-        //  processed[key] = true;
-        //}
-        //else {
         dom.removeAttribute(translate(key));
-        //}
       }
     }
 
     for (let key in element?.attrs) {
-      //if (processed[key]) { continue; }
-
       if (key.startsWith("on")) {
         if (element.attrs && element.attrs[key]) {
           dom.addEventListener(key.substring(2).toLowerCase(), element.attrs[key], { capture: true })

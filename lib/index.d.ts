@@ -6,7 +6,8 @@ interface LucidElement {
     children: string | any[];
 }
 declare class Lucid {
-    local(value: any, component: any): any[];
+    private component;
+    local(value: any): any[];
     private createElement;
     render(dom: HTMLElement, element: LucidElement): void;
     private _render;

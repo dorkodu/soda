@@ -7,11 +7,15 @@ interface LucidElement {
 }
 
 class Lucid {
-  local(value: any, component: any) {
-    let setState = (value: any) => { component.state = value; component.update(); }
-    let state = component.state || value;
+  private component: any;
 
-    return [state, setState];
+  local(value: any) {
+    const component = this.component;
+
+    return [
+      component.state || value,
+      (value: any) => { component.state = value; component.update(); }
+    ]
   }
 
   private createElement(
@@ -23,7 +27,6 @@ class Lucid {
       if (Array.isArray(children[i]))
         children.splice(i, 1, ...children[i]);
     }
-
     return { tag, attrs, children };
   }
 
@@ -34,16 +37,28 @@ class Lucid {
         update: () => {
           if (typeof element.tag === "function") {
             console.time("a")
+
+            const oldComponent = this.component;
+            this.component = component;
+
             const newElement = element.tag(component);
             this._update(component.__dom, newElement, component.__element)
             component.__element = newElement;
+
+            this.component = oldComponent;
+
             console.timeEnd("a")
           }
         },
         __dom: undefined as unknown as HTMLElement,
         __element: undefined as unknown as LucidElement
       };
+      const oldComponent = this.component;
+      this.component = component;
+
       this._render(dom, (component.__element = element.tag(component)), component);
+
+      this.component = oldComponent;
     }
   }
 

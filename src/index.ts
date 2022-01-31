@@ -7,8 +7,6 @@ interface LucidElement {
 }
 
 class Lucid {
-  private component: any;
-
   private createElement(
     tag: keyof HTMLElementTagNameMap | ((component: any) => LucidElement),
     attrs: { [key: string]: any },
@@ -29,14 +27,9 @@ class Lucid {
           if (typeof element.tag === "function") {
             console.time("a")
 
-            const oldComponent = this.component;
-            this.component = component;
-
             const newElement = element.tag(component);
             this._update(component.__dom, newElement, component.__element)
             component.__element = newElement;
-
-            this.component = oldComponent;
 
             console.timeEnd("a")
           }
@@ -44,12 +37,8 @@ class Lucid {
         __dom: undefined as unknown as HTMLElement,
         __element: undefined as unknown as LucidElement
       };
-      const oldComponent = this.component;
-      this.component = component;
 
       this._render(dom, (component.__element = element.tag(component)), component);
-
-      this.component = oldComponent;
     }
   }
 
@@ -67,12 +56,15 @@ class Lucid {
     }
 
     for (let i = 0; i < element.children.length; ++i) {
-      if (typeof element.children[i].tag === "function")
+      if (typeof element.children[i].tag === "function") {
         this.render(elem, element.children[i]);
-      else if (typeof element.children[i] === "object")
+      }
+      else if (typeof element.children[i] === "object") {
         this._render(elem, element.children[i], undefined);
-      else
+      }
+      else {
         elem.appendChild(document.createTextNode(element.children[i]));
+      }
     }
 
     dom.appendChild(elem);
@@ -106,6 +98,8 @@ class Lucid {
       }
     }
 
+    //const keyed = element.children.length > 0 && element.children[0].attrs && element.children[0].attrs["key"] !== undefined;
+
     for (let i = 0; i < element.children.length || i < dom.childNodes.length; ++i) {
       // Remove the excess amount of children
       if (element.children[i] === undefined) { dom.removeChild(dom.childNodes[i--]); continue; }
@@ -128,14 +122,16 @@ class Lucid {
         else if (dom.childNodes[i].nodeType !== document.ELEMENT_NODE) {
           dom.insertBefore(document.createElement(element.children[i].tag), dom.childNodes[i]);
         }
+
         this._update(dom.childNodes[i] as HTMLElement, element.children[i], oldElement.children[i]);
       }
       else {
         if (dom.childNodes[i] === undefined) {
           dom.appendChild(document.createTextNode(element.children[i]));
         }
-        else if (dom.childNodes[i].nodeType !== document.TEXT_NODE)
+        else if (dom.childNodes[i].nodeType !== document.TEXT_NODE) {
           dom.insertBefore(document.createTextNode(element.children[i]), dom.childNodes[i]);
+        }
         else if (dom.childNodes[i].nodeValue !== element.children[i]) {
           dom.childNodes[i].nodeValue = element.children[i];
         }

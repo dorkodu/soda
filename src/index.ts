@@ -55,7 +55,7 @@ class Lucid {
 
     for (const key in element.attrs) {
       if (key.startsWith("on")) {
-        elem.addEventListener(key.substring(2).toLowerCase(), element.attrs[key])
+        elem.addEventListener(key.substring(2).toLowerCase(), element.attrs[key], { capture: true })
       }
       else {
         elem.setAttribute(translate(key), element.attrs[key]);
@@ -80,24 +80,36 @@ class Lucid {
       console.log("TODO: Diff");
     }
 
-    for (let key in oldElement?.attrs) {
-      console.log("Old: " + key);
+    //const processed: { [key: string]: boolean } = {};
 
+    for (let key in oldElement?.attrs) {
       if (key.startsWith("on")) {
         if (oldElement.attrs && oldElement.attrs[key]) {
-          dom.removeEventListener(key.substring(2).toLowerCase(), oldElement.attrs[key]);
+          dom.removeEventListener(key.substring(2).toLowerCase(), oldElement.attrs[key], { capture: true });
         }
+        //if (element?.attrs && element?.attrs[key]) {
+        //  dom.addEventListener(key.substring(2).toLowerCase(), element.attrs[key])
+        //  processed[key] = true;
+        //}
       }
       else {
+        //if (element?.attrs[key]) {
+        //  dom.setAttribute(translate(key), element.attrs[key]);
+        //  processed[key] = true;
+        //}
+        //else {
         dom.removeAttribute(translate(key));
+        //}
       }
     }
 
     for (let key in element?.attrs) {
-      console.log("New: " + key);
+      //if (processed[key]) { continue; }
+
       if (key.startsWith("on")) {
-        if (element.attrs && element.attrs[key])
-          dom.addEventListener(key.substring(2).toLowerCase(), element.attrs[key])
+        if (element.attrs && element.attrs[key]) {
+          dom.addEventListener(key.substring(2).toLowerCase(), element.attrs[key], { capture: true })
+        }
       }
       else {
         dom.setAttribute(translate(key), element.attrs[key]);
@@ -126,7 +138,6 @@ class Lucid {
         else if (dom.childNodes[i].nodeType !== document.ELEMENT_NODE) {
           dom.insertBefore(document.createElement(element.children[i].tag), dom.childNodes[i]);
         }
-
         this._update(dom.childNodes[i] as HTMLElement, element.children[i], oldElement.children[i]);
       }
       else {

@@ -76,18 +76,31 @@ class Lucid {
       console.log("TODO: Diff");
     }
 
+    //const processed: { [key: string]: boolean } = {};
+
     for (let key in oldElement?.attrs) {
       if (key.startsWith("on")) {
         if (oldElement.attrs && oldElement.attrs[key]) {
           dom.removeEventListener(key.substring(2).toLowerCase(), oldElement.attrs[key], { capture: true });
         }
+        //if (element.attrs && element.attrs[key]) {
+        //  dom.addEventListener(key.substring(2).toLowerCase(), element.attrs[key], { capture: true })
+        //  processed[key] = true;
+        //}
       }
       else {
+        //if (element.attrs && element.attrs[key]) {
+        //  dom.setAttribute(translate(key), element.attrs[key]);
+        //  processed[key] = true;
+        //} else {
         dom.removeAttribute(translate(key));
+        //}
       }
     }
 
     for (let key in element?.attrs) {
+      //if (processed[key]) continue;
+
       if (key.startsWith("on")) {
         if (element.attrs && element.attrs[key]) {
           dom.addEventListener(key.substring(2).toLowerCase(), element.attrs[key], { capture: true })

@@ -146,27 +146,46 @@ class Lucid {
 
         for (let oldCursor = 0, newCursor = 0; oldCursor < oldarr.length || newCursor < newarr.length;) {
           if (oldarr[oldCursor]?.attrs.key === newarr[newCursor]?.attrs.key) {
-            //console.log("skipped");
+            //console.log("Skip")
+
             ++oldCursor;
             ++newCursor;
           }
           else if (oldarr[oldCursor] && newarr[newCursor]) {
-            //let targetDOM: HTMLElement = current[oldarr[oldCursor].attrs.key];
-            //let containerDOM = document.createElement("div");
-            //this.render(containerDOM, newarr[newCursor]);
-            //dom.insertBefore(containerDOM.firstChild as HTMLElement, targetDOM);
+            //console.log("Insert before")
+
+            let target: HTMLElement = current[oldarr[oldCursor].attrs.key];
+            const container = document.createElement("div");
+            this.render(container, newarr[newCursor]);
+
+            dom.insertBefore(container.firstChild as HTMLElement, target);
+
+            ++newCursor;
           }
-          else {
+          else if (!oldarr[oldCursor] && newarr[newCursor]) {
+            //console.log("Append")
+
             const container = document.createElement("div");
             this.render(container, newarr[newCursor]);
             dom.appendChild(container.firstChild as HTMLElement);
+
+            ++newCursor;
+          }
+          else if (oldarr[oldCursor] && !newarr[newCursor]) {
+            //console.log("Remove")
+            dom.removeChild(current[oldarr[oldCursor].attrs.key]);
+
+            ++oldCursor;
+            ++newCursor;
+          }
+          else {
+            //console.log("Nope");
 
             ++oldCursor;
             ++newCursor;
           }
         }
 
-        // console.log(current);
         break;
       }
       else if (typeof element.children[i] === "object") {

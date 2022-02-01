@@ -12,10 +12,6 @@ class Lucid {
     attrs: { [key: string]: any },
     ...children: any
   ): LucidElement {
-    for (let i = 0; i < children.length; ++i) {
-      if (Array.isArray(children[i]))
-        children.splice(i, 1, ...children[i]);
-    }
     return { tag, attrs, children };
   }
 
@@ -43,6 +39,14 @@ class Lucid {
   }
 
   private _render(dom: HTMLElement, element: LucidElement, component: any) {
+    if (Array.isArray(element)) {
+      for (let i = 0; i < element.length; ++i) {
+        this.render(dom, element[i]);
+      }
+
+      return;
+    }
+
     const elem = document.createElement(element.tag as keyof HTMLElementTagNameMap);
     if (component) component.__dom = elem;
 
@@ -54,6 +58,7 @@ class Lucid {
         elem.setAttribute(translate(key), element.attrs[key]);
       }
     }
+
 
     for (let i = 0; i < element.children.length; ++i) {
       if (typeof element.children[i].tag === "function") {
@@ -127,6 +132,42 @@ class Lucid {
         else {
           dom.insertBefore(container.firstChild as HTMLElement, dom.childNodes[i]);
         }
+      }
+      else if (Array.isArray(element.children[i])) {
+        const oldarr = oldElement.children[i];
+        const newarr = element.children[i];
+
+        let current: any = {};
+
+        for (let index = 0; index < oldarr.length; ++index)
+          current[oldarr[index].attrs.key] = dom.childNodes[index];
+        //console.log(oldarr);
+        // console.log(newarr);
+
+        for (let oldCursor = 0, newCursor = 0; oldCursor < oldarr.length || newCursor < newarr.length;) {
+          if (oldarr[oldCursor]?.attrs.key === newarr[newCursor]?.attrs.key) {
+            //console.log("skipped");
+            ++oldCursor;
+            ++newCursor;
+          }
+          else if (oldarr[oldCursor] && newarr[newCursor]) {
+            //let targetDOM: HTMLElement = current[oldarr[oldCursor].attrs.key];
+            //let containerDOM = document.createElement("div");
+            //this.render(containerDOM, newarr[newCursor]);
+            //dom.insertBefore(containerDOM.firstChild as HTMLElement, targetDOM);
+          }
+          else {
+            const container = document.createElement("div");
+            this.render(container, newarr[newCursor]);
+            dom.appendChild(container.firstChild as HTMLElement);
+
+            ++oldCursor;
+            ++newCursor;
+          }
+        }
+
+        // console.log(current);
+        break;
       }
       else if (typeof element.children[i] === "object") {
         if (dom.childNodes[i] === undefined) {

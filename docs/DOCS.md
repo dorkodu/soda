@@ -118,7 +118,7 @@ function Post(component) {
 soda.render(<App />, document.getElementById("app"))
 ```
 
-We make use of `map` function and pass argument to the `Post` component.
+We make use of `map` function and pass attribute to the `Post` component.
 
 > Currently, **Soda** doesn't support direct mapping arrays to DOM elements, it only support mapping to  components. Which means `{posts.map((post) => <div>{post.content}</div>)}` won't work.
 
@@ -197,4 +197,4 @@ function Todo(component) {
 soda.render(<App />, document.getElementById("app"))
 ```
 
-Since form elements keep their own state themselves, we can receive input by using the `onInput` event. In the `jsx` expression, we pass `todo` as an argument and also we have to pass an index to the `key` property since it's a dynamic array meaning we might add or remove elements to it.
+Since form elements keep their own state themselves, we can receive input by using the `onInput` event. In the `jsx` expression, we pass `todo` as an attribute and also we have to pass an index to the `key` property since it's a dynamic array meaning we might add or remove elements to it.

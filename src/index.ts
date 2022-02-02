@@ -1,14 +1,12 @@
-import { translate } from "./translation";
-
 interface SodaElement {
-  tag: keyof HTMLElementTagNameMap | ((component: any) => SodaElement),
+  tag: string | ((component: any) => SodaElement),
   attrs: { [key: string]: any };
   children: string | any[];
 }
 
 class Soda {
   private createElement(
-    tag: keyof HTMLElementTagNameMap | ((component: any) => SodaElement),
+    tag: string | ((component: any) => SodaElement),
     attrs: { [key: string]: any },
     ...children: any
   ): SodaElement {
@@ -34,21 +32,29 @@ class Soda {
         __element: undefined as unknown as SodaElement
       };
 
-      this._render(dom, (component.__element = element.tag(component)), component);
+      this._render(dom, (component.__element = element.tag(component)), component, { svg: false });
     }
   }
 
-  private _render(dom: HTMLElement, element: SodaElement, component: any) {
+  private _render(dom: HTMLElement, element: SodaElement, component: any, options: { svg: boolean }) {
     if (Array.isArray(element)) {
       for (let i = 0; i < element.length; ++i) {
         if (typeof element[i].tag === "function") { this.render(element[i], dom); }
-        else { this._render(dom, element[i], undefined); }
+        else { this._render(dom, element[i], undefined, options); }
       }
 
       return;
     }
 
-    const elem = document.createElement(element.tag as keyof HTMLElementTagNameMap);
+    let elem: HTMLElement;
+    if (element.tag === "svg" || options.svg) {
+      elem = document.createElementNS("http://www.w3.org/2000/svg", element.tag as string) as unknown as HTMLElement;
+      options.svg = true;
+    }
+    else {
+      elem = document.createElement(element.tag as string);
+    }
+
     if (component) component.__dom = elem;
 
     for (let key in element.attrs) {
@@ -56,8 +62,8 @@ class Soda {
         elem.addEventListener(key.substring(2).toLowerCase(), element.attrs[key], { capture: true })
       }
       else {
-        if ((key = translate(key)) !== "")
-          elem.setAttribute(translate(key), element.attrs[key]);
+        if ((key = this.translate(key)) !== "")
+          elem.setAttribute(key, element.attrs[key]);
       }
     }
 
@@ -67,7 +73,7 @@ class Soda {
         this.render(element.children[i], elem);
       }
       else if (typeof element.children[i] === "object") {
-        this._render(elem, element.children[i], undefined);
+        this._render(elem, element.children[i], undefined, options);
       }
       else {
         elem.appendChild(document.createTextNode(element.children[i]));
@@ -90,8 +96,8 @@ class Soda {
         }
       }
       else {
-        if ((key = translate(key)) !== "")
-          dom.removeAttribute(translate(key));
+        if ((key = this.translate(key)) !== "")
+          dom.removeAttribute(key);
       }
     }
 
@@ -102,8 +108,8 @@ class Soda {
         }
       }
       else {
-        if ((key = translate(key)) !== "")
-          dom.setAttribute(translate(key), element.attrs[key]);
+        if ((key = this.translate(key)) !== "")
+          dom.setAttribute(key, element.attrs[key]);
       }
     }
 
@@ -188,6 +194,11 @@ class Soda {
         }
       }
     }
+  }
+
+  private translate(key: string) {
+    if (key === "key") return "";
+    return key;
   }
 }
 

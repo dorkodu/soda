@@ -1,21 +1,21 @@
 import { translate } from "./translation";
 
-interface LucidElement {
-  tag: keyof HTMLElementTagNameMap | ((component: any) => LucidElement),
+interface SodaElement {
+  tag: keyof HTMLElementTagNameMap | ((component: any) => SodaElement),
   attrs: { [key: string]: any };
   children: string | any[];
 }
 
-class Lucid {
+class Soda {
   private createElement(
-    tag: keyof HTMLElementTagNameMap | ((component: any) => LucidElement),
+    tag: keyof HTMLElementTagNameMap | ((component: any) => SodaElement),
     attrs: { [key: string]: any },
     ...children: any
-  ): LucidElement {
+  ): SodaElement {
     return { tag, attrs, children };
   }
 
-  render(dom: HTMLElement, element: LucidElement) {
+  render(dom: HTMLElement, element: SodaElement) {
     if (typeof element.tag === "function") {
       const component = {
         attrs: element.attrs,
@@ -31,14 +31,14 @@ class Lucid {
           }
         },
         __dom: undefined as unknown as HTMLElement,
-        __element: undefined as unknown as LucidElement
+        __element: undefined as unknown as SodaElement
       };
 
       this._render(dom, (component.__element = element.tag(component)), component);
     }
   }
 
-  private _render(dom: HTMLElement, element: LucidElement, component: any) {
+  private _render(dom: HTMLElement, element: SodaElement, component: any) {
     if (Array.isArray(element)) {
       for (let i = 0; i < element.length; ++i) {
         this.render(dom, element[i]);
@@ -75,37 +75,24 @@ class Lucid {
     dom.appendChild(elem);
   }
 
-  private _update(dom: HTMLElement, element: LucidElement, oldElement: LucidElement) {
+  private _update(dom: HTMLElement, element: SodaElement, oldElement: SodaElement) {
     if (dom.tagName.toLowerCase() !== element.tag) {
       // TODO: Diff
       console.log("TODO: Diff");
     }
-
-    //const processed: { [key: string]: boolean } = {};
 
     for (let key in oldElement?.attrs) {
       if (key.startsWith("on")) {
         if (oldElement.attrs && oldElement.attrs[key]) {
           dom.removeEventListener(key.substring(2).toLowerCase(), oldElement.attrs[key], { capture: true });
         }
-        //if (element.attrs && element.attrs[key]) {
-        //  dom.addEventListener(key.substring(2).toLowerCase(), element.attrs[key], { capture: true })
-        //  processed[key] = true;
-        //}
       }
       else {
-        //if (element.attrs && element.attrs[key]) {
-        //  dom.setAttribute(translate(key), element.attrs[key]);
-        //  processed[key] = true;
-        //} else {
         dom.removeAttribute(translate(key));
-        //}
       }
     }
 
     for (let key in element?.attrs) {
-      //if (processed[key]) continue;
-
       if (key.startsWith("on")) {
         if (element.attrs && element.attrs[key]) {
           dom.addEventListener(key.substring(2).toLowerCase(), element.attrs[key], { capture: true })
@@ -115,8 +102,6 @@ class Lucid {
         dom.setAttribute(translate(key), element.attrs[key]);
       }
     }
-
-    //const keyed = element.children.length > 0 && element.children[0].attrs && element.children[0].attrs["key"] !== undefined;
 
     for (let i = 0; i < element.children.length || i < dom.childNodes.length; ++i) {
       // Remove the excess amount of children
@@ -141,19 +126,13 @@ class Lucid {
 
         for (let index = 0; index < oldarr.length; ++index)
           current[oldarr[index].attrs.key] = dom.childNodes[index];
-        //console.log(oldarr);
-        // console.log(newarr);
 
         for (let oldCursor = 0, newCursor = 0; oldCursor < oldarr.length || newCursor < newarr.length;) {
           if (oldarr[oldCursor]?.attrs.key === newarr[newCursor]?.attrs.key) {
-            //console.log("Skip")
-
             ++oldCursor;
             ++newCursor;
           }
           else if (oldarr[oldCursor] && newarr[newCursor]) {
-            //console.log("Insert before")
-
             let target: HTMLElement = current[oldarr[oldCursor].attrs.key];
             const container = document.createElement("div");
             this.render(container, newarr[newCursor]);
@@ -163,8 +142,6 @@ class Lucid {
             ++newCursor;
           }
           else if (!oldarr[oldCursor] && newarr[newCursor]) {
-            //console.log("Append")
-
             const container = document.createElement("div");
             this.render(container, newarr[newCursor]);
             dom.appendChild(container.firstChild as HTMLElement);
@@ -172,15 +149,12 @@ class Lucid {
             ++newCursor;
           }
           else if (oldarr[oldCursor] && !newarr[newCursor]) {
-            //console.log("Remove")
             dom.removeChild(current[oldarr[oldCursor].attrs.key]);
 
             ++oldCursor;
             ++newCursor;
           }
           else {
-            //console.log("Nope");
-
             ++oldCursor;
             ++newCursor;
           }
@@ -213,4 +187,4 @@ class Lucid {
   }
 }
 
-export const lucid = new Lucid();
+export const soda = new Soda();

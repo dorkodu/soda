@@ -1,6 +1,3 @@
-![Lucid logo](res/lucid-logo-dark-s.png)
+# Soda
 
-# Lucid
-
-A simple and lightweight JavaScript library for developing component-based web
-apps.
+🥤 Soda - the fresh UI library in javascript

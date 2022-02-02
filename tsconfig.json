@@ -1,15 +1,15 @@
 {
   "compilerOptions": {
-    "jsx": "react",
-    "module": "ESNext", 
+    "module": "ESNext",
     "target": "ESNext",
     "moduleResolution": "Node",
     "strict": true,
-    "declaration": true, 
+    "declaration": true,
     "outDir": "lib",
     "rootDir": "src",
-    "declarationDir": "",
-    "reactNamespace": "lucid",
+    "declarationDir": ""
   },
-  "include":["src/**/*"] 
+  "include": [
+    "src/**/*"
+  ]
 }

@@ -1,7 +1,7 @@
 {
-  "name": "@dorkodu/lucid",
+  "name": "@dorkodu/soda",
   "version": "0.0.1",
-  "description": "A simple and lightweight JavaScript library for developing component-based web apps.",
+  "description": "🥤 Soda - the fresh UI library in javascript",
   "main": "lib/index.js",
   "module": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -14,12 +14,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dorkodu/lucid.git"
+    "url": "git+https://github.com/dorkodu/soda.git"
   },
   "bugs": {
-    "url": "https://github.com/dorkodu/lucid/issues"
+    "url": "https://github.com/dorkodu/soda/issues"
   },
-  "homepage": "https://github.com/dorkodu/lucid#readme",  
+  "homepage": "https://github.com/dorkodu/soda#readme",
   "author": "Berk Cambaz",
   "license": "MIT",
   "devDependencies": {

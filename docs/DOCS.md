@@ -1,6 +1,6 @@
 # Soda
 
-**🥤 Soda - the fresh javascript library**
+**🥤 Soda - the fresh UI library in javascript**
 
 
 

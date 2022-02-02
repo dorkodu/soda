@@ -11,19 +11,9 @@ const plugins = [
     sourceType: "module",
     extensions,
     include: path.resolve("src", "**"),
-    plugins: [
-      ["babel-plugin-jsx-pragmatic", {
-        "module": "@lucid",
-        "import": "lucid"
-      }],
-      ["babel-plugin-transform-react-jsx", {
-        "pragma": "lucid",
-      }],
-    ],
     presets: [
       "@babel/preset-env",
-      "@babel/preset-typescript",
-      "@babel/preset-react",
+      "@babel/preset-typescript"
     ]
   })
 ]

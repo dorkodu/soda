@@ -15,7 +15,7 @@ class Soda {
     return { tag, attrs, children };
   }
 
-  render(dom: HTMLElement, element: SodaElement) {
+  render(element: SodaElement, dom: HTMLElement) {
     if (typeof element.tag === "function") {
       const component = {
         attrs: element.attrs,
@@ -41,7 +41,7 @@ class Soda {
   private _render(dom: HTMLElement, element: SodaElement, component: any) {
     if (Array.isArray(element)) {
       for (let i = 0; i < element.length; ++i) {
-        this.render(dom, element[i]);
+        this.render(element[i], dom);
       }
 
       return;
@@ -62,7 +62,7 @@ class Soda {
 
     for (let i = 0; i < element.children.length; ++i) {
       if (typeof element.children[i].tag === "function") {
-        this.render(elem, element.children[i]);
+        this.render(element.children[i], elem);
       }
       else if (typeof element.children[i] === "object") {
         this._render(elem, element.children[i], undefined);
@@ -109,7 +109,7 @@ class Soda {
 
       if (typeof element.children[i].tag === "function") {
         const container = document.createElement("div");
-        this.render(container, element.children[i]);
+        this.render(element.children[i], container);
 
         if (dom.childNodes[i] === undefined) {
           dom.appendChild(container.firstChild as HTMLElement);
@@ -135,7 +135,7 @@ class Soda {
           else if (oldarr[oldCursor] && newarr[newCursor]) {
             let target: HTMLElement = current[oldarr[oldCursor].attrs.key];
             const container = document.createElement("div");
-            this.render(container, newarr[newCursor]);
+            this.render(newarr[newCursor], container);
 
             dom.insertBefore(container.firstChild as HTMLElement, target);
 
@@ -143,7 +143,7 @@ class Soda {
           }
           else if (!oldarr[oldCursor] && newarr[newCursor]) {
             const container = document.createElement("div");
-            this.render(container, newarr[newCursor]);
+            this.render(newarr[newCursor], container);
             dom.appendChild(container.firstChild as HTMLElement);
 
             ++newCursor;

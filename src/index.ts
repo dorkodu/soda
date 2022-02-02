@@ -41,7 +41,8 @@ class Soda {
   private _render(dom: HTMLElement, element: SodaElement, component: any) {
     if (Array.isArray(element)) {
       for (let i = 0; i < element.length; ++i) {
-        this.render(element[i], dom);
+        if (typeof element[i].tag === "function") { this.render(element[i], dom); }
+        else { this._render(dom, element[i], undefined); }
       }
 
       return;
@@ -50,12 +51,13 @@ class Soda {
     const elem = document.createElement(element.tag as keyof HTMLElementTagNameMap);
     if (component) component.__dom = elem;
 
-    for (const key in element.attrs) {
+    for (let key in element.attrs) {
       if (key.startsWith("on")) {
         elem.addEventListener(key.substring(2).toLowerCase(), element.attrs[key], { capture: true })
       }
       else {
-        elem.setAttribute(translate(key), element.attrs[key]);
+        if ((key = translate(key)) !== "")
+          elem.setAttribute(translate(key), element.attrs[key]);
       }
     }
 
@@ -88,7 +90,8 @@ class Soda {
         }
       }
       else {
-        dom.removeAttribute(translate(key));
+        if ((key = translate(key)) !== "")
+          dom.removeAttribute(translate(key));
       }
     }
 
@@ -99,7 +102,8 @@ class Soda {
         }
       }
       else {
-        dom.setAttribute(translate(key), element.attrs[key]);
+        if ((key = translate(key)) !== "")
+          dom.setAttribute(translate(key), element.attrs[key]);
       }
     }
 

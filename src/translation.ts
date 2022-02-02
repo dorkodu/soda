@@ -396,11 +396,13 @@ const translations = {
   y2: "y2",
   yChannelSelector: "ychannelselector",
   z: "z",
-  zoomAndPan: "zoomandpan"
+  zoomAndPan: "zoomandpan",
+
+  key: ""
 };
 
 export function translate(key: string | keyof typeof translations) {
   const translated = translations[key as keyof typeof translations];
-  if (translated) return translated;
-  return key.toLowerCase(); 
+  if (translated !== undefined) return translated;
+  return key.toLowerCase();
 }

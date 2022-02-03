@@ -15,10 +15,12 @@ class Seekr {
 
       let totalTime = 0;
       let startTime = 0;
+      let testTime = 0;
       for (let i = 0; i < it.length; ++i) {
         startTime = performance.now();
         const result = it[i].cb();
-        totalTime += performance.now() - startTime;
+        testTime = performance.now() - startTime;
+        totalTime += testTime;
 
         if (result) {
           ++pass;
@@ -27,7 +29,7 @@ class Seekr {
           ++fail;
         }
 
-        tests.push({ name: it[i].name, result })
+        tests.push({ name: it[i].name, result: result, time: testTime })
 
         beforeEach && beforeEach();
       }
@@ -36,14 +38,14 @@ class Seekr {
       let style = [];
 
       string += `${fail > 0 ? "%c FAIL " : "%c PASS "}%c ${name}`
-      style.push(fail > 0 ? "background-color:red;" : "background-color:green;", "")
+      style.push(fail > 0 ? "background-color:red;" : "background-color:green;", "font-weight:bold;")
       for (let i = 0; i < tests.length; ++i) {
-        string += `\n%c${tests[i].result ? "✔️" : "❌"} ${tests[i].name}`
+        string += `\n%c${tests[i].result ? "✔️" : "❌"} ${tests[i].name} - ${(tests[i].time).toFixed(3)}ms`
         style.push("");
       }
       string += `\n\nTests: %c${pass} passed, %c${fail} failed`
       style.push("color:green;", "color:red;")
-      string += `\n%cTime: ${(totalTime / 1000).toFixed(6)}s`
+      string += `\n%cTime: ${(totalTime).toFixed(3)}ms`
       style.push("");
 
       console.log(string, ...style);

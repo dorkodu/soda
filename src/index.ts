@@ -147,7 +147,10 @@ class Soda {
           else if (oldarr[oldCursor] && newarr[newCursor]) {
             let target: HTMLElement = current[oldarr[oldCursor].attrs.key];
             const container = document.createElement("div");
-            this.render(newarr[newCursor], container);
+            if (typeof newarr[newCursor].tag === "function")
+              this.render(newarr[newCursor], container);
+            else
+              this._render(container, newarr[newCursor], undefined, { svg: false });
 
             dom.insertBefore(container.firstChild as HTMLElement, target);
 
@@ -155,7 +158,10 @@ class Soda {
           }
           else if (!oldarr[oldCursor] && newarr[newCursor]) {
             const container = document.createElement("div");
-            this.render(newarr[newCursor], container);
+            if (typeof newarr[newCursor].tag === "function")
+              this.render(newarr[newCursor], container);
+            else
+              this._render(container, newarr[newCursor], undefined, { svg: false });
             dom.appendChild(container.firstChild as HTMLElement);
 
             ++newCursor;

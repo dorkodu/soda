@@ -51,6 +51,28 @@ seekr.describe("Renderer", () => {
 
 
 
+  seekr.it("render then change tag", () => {
+    let comp;
+    let count = 1;
+
+    function App(component) {
+      // To access component outside scope of this function
+      comp = component;
+
+      if (count === 1) return <div>Hello, world!</div>
+      return <span>Hello, world!</span>
+    }
+
+    soda.render(<App />, document.body)
+
+    ++count;
+    comp.update();
+
+    return document.body.innerHTML === "<span>Hello, world!</span>"
+  })
+
+
+
   seekr.it("store state and update", () => {
     function App(component) {
       component.state = component.state || { count: 0 }

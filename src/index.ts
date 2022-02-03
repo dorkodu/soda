@@ -85,8 +85,10 @@ class Soda {
 
   private _update(dom: HTMLElement, element: SodaElement, oldElement: SodaElement) {
     if (dom.tagName.toLowerCase() !== element.tag) {
-      // TODO: Diff
-      console.log("TODO: Diff");
+      const parent = dom.parentNode;
+      parent?.removeChild(dom);
+      dom = document.createElement(element.tag as string);
+      parent?.appendChild(dom);
     }
 
     for (let key in oldElement?.attrs) {

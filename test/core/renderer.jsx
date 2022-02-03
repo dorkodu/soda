@@ -126,4 +126,22 @@ seekr.describe("Renderer", () => {
 
     return document.body.innerHTML === "<div><div>s</div><div>o</div><div>d</div><div>a</div></div>"
   })
+
+  seekr.it("render with a condition", () => {
+    let count = 1;
+
+    function App(component) {
+      const increase = () => { count++; component.update(); }
+
+      if (count === 1) return <button onclick={increase}>Increase!</button>
+      return <div>Count is 2</div>
+    }
+
+    soda.render(<App />, document.body)
+
+    // Should increase count by 1
+    document.body.firstChild.click();
+
+    return document.body.innerHTML === "<div>Count is 2</div>"
+  })
 })

@@ -19,13 +19,13 @@ class Soda {
         attrs: element.attrs,
         update: () => {
           if (typeof element.tag === "function") {
-            console.time("a")
+            //console.time("a")
 
             const newElement = element.tag(component);
             this._update(component.__dom, newElement, component.__element)
             component.__element = newElement;
 
-            console.timeEnd("a")
+            //console.timeEnd("a")
           }
         },
         __dom: undefined as unknown as HTMLElement,

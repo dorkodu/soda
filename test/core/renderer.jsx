@@ -145,7 +145,7 @@ seekr.describe("Renderer", () => {
     return document.body.innerHTML === "<div>Count is 2</div>"
   })
 
-  seekr.it("render children then add 1 more", () => {
+  seekr.it("render children then add 1", () => {
     const letters = ["s", "o", "d", "a"]
 
     function App(component) {
@@ -170,7 +170,7 @@ seekr.describe("Renderer", () => {
     return document.body.innerHTML === "<div><button>Add!</button><div>s</div><div>o</div><div>d</div><div>a</div><div>!</div></div>"
   })
 
-  seekr.it("render children as components then add 1 more", () => {
+  seekr.it("render children as components then add 1", () => {
     const letters = ["s", "o", "d", "a"]
 
     function App(component) {
@@ -198,5 +198,64 @@ seekr.describe("Renderer", () => {
     document.body.firstChild.firstChild.click();
 
     return document.body.innerHTML === "<div><button>Add!</button><div>s</div><div>o</div><div>d</div><div>a</div><div>!</div></div>"
+  })
+
+  seekr.it("render children then remove 1", () => {
+    const letters = ["s", "o", "d", "a", "!"]
+
+    function App(component) {
+      const removeLetter = () => {
+        letters.pop();
+        component.update();
+      }
+
+      return (
+        <div>
+          <button onclick={removeLetter}>Remove!</button>
+          <div>
+            {letters.map((letter, index) => <div key={index}>{letter}</div>)}
+          </div>
+        </div>
+      )
+    }
+
+    soda.render(<App />, document.body)
+
+    // Should add a letter
+    document.body.firstChild.firstChild.click();
+
+    return document.body.innerHTML === "<div><button>Remove!</button><div><div>s</div><div>o</div><div>d</div><div>a</div></div></div>"
+  })
+
+  seekr.it("render children as components then remove 1", () => {
+    const letters = ["s", "o", "d", "a", "!"]
+
+    function App(component) {
+      const removeLetter = () => {
+        letters.pop();
+        component.update();
+      }
+
+      return (
+        <div>
+          <button onclick={removeLetter}>Remove!</button>
+          <div>
+            {letters.map((letter, index) => <Letter key={index} letter={letter} />)}
+          </div>
+        </div>
+      )
+    }
+
+    function Letter(component) {
+      const letter = component.attrs.letter;
+      return <div>{letter}</div>
+    }
+
+    soda.render(<App />, document.body)
+
+    // Should add a letter
+    document.body.firstChild.firstChild.click();
+
+    return document.body.innerHTML === "<div><button>Remove!</button><div><div>s</div><div>o</div><div>d</div><div>a</div></div></div>"
   })
 })

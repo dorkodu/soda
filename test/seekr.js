@@ -43,7 +43,7 @@ class Seekr {
       }
       string += `\n\nTests: %c${pass} passed, %c${fail} failed`
       style.push("color:green;", "color:red;")
-      string += `\n%cTime: ${totalTime / 1000}s`
+      string += `\n%cTime: ${(totalTime / 1000).toFixed(6)}s`
       style.push("");
 
       console.log(string, ...style);

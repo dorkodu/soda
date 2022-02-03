@@ -28,6 +28,21 @@ seekr.describe("Renderer", () => {
     return document.body.innerHTML === "<div>Count: 0</div>"
   })
 
+  seekr.it("render by passing attributes", () => {
+    function App(component) {
+      return <div><Greeting message={"Hi!"} /></div>
+    }
+
+    function Greeting(component) {
+      const message = component.attrs.message;
+      return <div>{message}</div>
+    }
+
+    soda.render(<App />, document.body)
+
+    return document.body.innerHTML === "<div><div>Hi!</div></div>"
+  })
+
   seekr.it("store state and update", () => {
     function App(component) {
       component.state = component.state || { count: 0 }
@@ -73,5 +88,42 @@ seekr.describe("Renderer", () => {
     soda.render(<App />, document.body)
 
     return document.body.innerHTML === "<div><div>Hello, world!</div></div>"
+  })
+
+  seekr.it("render an array as children", () => {
+    const letters = ["s", "o", "d", "a"]
+
+    function App(component) {
+      return (
+        <div>
+          {letters.map((letter) => <div>{letter}</div>)}
+        </div>
+      )
+    }
+
+    soda.render(<App />, document.body)
+
+    return document.body.innerHTML === "<div><div>s</div><div>o</div><div>d</div><div>a</div></div>"
+  })
+
+  seekr.it("render an array of components as children", () => {
+    const letters = ["s", "o", "d", "a"]
+
+    function App(component) {
+      return (
+        <div>
+          {letters.map((letter, index) => <Letter key={index} letter={letter} />)}
+        </div>
+      )
+    }
+
+    function Letter(component) {
+      const letter = component.attrs.letter;
+      return <div>{letter}</div>
+    }
+
+    soda.render(<App />, document.body)
+
+    return document.body.innerHTML === "<div><div>s</div><div>o</div><div>d</div><div>a</div></div>"
   })
 })

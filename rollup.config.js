@@ -3,7 +3,7 @@ import typescript from "@rollup/plugin-typescript";
 import babel from "@rollup/plugin-babel";
 import path from "path";
 
-const extensions = [".js", ".jsx", ".ts", ".tsx"];
+const extensions = [".js", ".ts",];
 const input = "src/index.ts";
 const plugins = [
   typescript({ tsconfig: "./tsconfig.json" }),

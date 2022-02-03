@@ -430,4 +430,79 @@ seekr.describe("Renderer", () => {
 
     return document.body.innerHTML === "<div><button>Remove!</button><div><div>s</div><div>o</div><div>d</div><div>a</div></div></div>"
   })
+
+
+
+  seekr.it("render children then remove middle", () => {
+    const letters = [
+      { id: 0, letter: "s" },
+      { id: 1, letter: "o" },
+      { id: 2, letter: "-" },
+      { id: 3, letter: "d" },
+      { id: 4, letter: "a" }
+    ]
+
+    function App(component) {
+      const removeLetter = () => {
+        letters.splice(2, 1);
+        component.update();
+      }
+
+      return (
+        <div>
+          <button onclick={removeLetter}>Remove!</button>
+          <div>
+            {letters.map((letter) => <div key={letter.id}>{letter.letter}</div>)}
+          </div>
+        </div>
+      )
+    }
+
+    soda.render(<App />, document.body)
+
+    // Should remove a letter
+    document.body.firstChild.firstChild.click();
+
+    return document.body.innerHTML === "<div><button>Remove!</button><div><div>s</div><div>o</div><div>d</div><div>a</div></div></div>"
+  })
+
+
+
+  seekr.it("render children as components then remove middle", () => {
+    const letters = [
+      { id: 0, letter: "s" },
+      { id: 1, letter: "o" },
+      { id: 2, letter: "-" },
+      { id: 3, letter: "d" },
+      { id: 4, letter: "a" }
+    ]
+
+    function App(component) {
+      const removeLetter = () => {
+        letters.splice(2, 1);
+        component.update();
+      }
+
+      return (
+        <div>
+          <button onclick={removeLetter}>Remove!</button>
+          <div>
+            {letters.map((letter) => <Letter key={letter.id} letter={letter.letter} />)}
+          </div>
+        </div>
+      )
+    }
+
+    function Letter(component) {
+      const letter = component.attrs.letter;
+      return <div>{letter}</div>
+    }
+
+    soda.render(<App />, document.body)
+
+    // Should remove a letter
+    document.body.firstChild.firstChild.click();
+
+    return document.body.innerHTML === "<div><button>Remove!</button><div><div>s</div><div>o</div><div>d</div><div>a</div></div></div>"
+  })
 })

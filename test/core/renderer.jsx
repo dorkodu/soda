@@ -14,7 +14,6 @@ seekr.describe("Renderer", () => {
 
     soda.render(<App />, document.body)
 
-    //return document.body.innerHTML === "<div>Hello, world!</div>"
-    return new Date().getSeconds() % 2;
+    return document.body.innerHTML === "<div>Hello, world!</div>"
   })
 })

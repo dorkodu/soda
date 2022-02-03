@@ -437,6 +437,79 @@ seekr.describe("Renderer", () => {
     const letters = [
       { id: 0, letter: "s" },
       { id: 1, letter: "o" },
+      { id: 3, letter: "d" },
+      { id: 4, letter: "a" }
+    ]
+
+    function App(component) {
+      const addLetter = () => {
+        letters.splice(2, 0, { id: 2, letter: "-" });
+        component.update();
+      }
+
+      return (
+        <div>
+          <button onclick={addLetter}>Add!</button>
+          <div>
+            {letters.map((letter) => <div key={letter.id}>{letter.letter}</div>)}
+          </div>
+        </div>
+      )
+    }
+
+    soda.render(<App />, document.body)
+
+    // Should add a letter
+    document.body.firstChild.firstChild.click();
+
+    return document.body.innerHTML === "<div><button>Add!</button><div><div>s</div><div>o</div><div>-</div><div>d</div><div>a</div></div></div>"
+  })
+
+
+
+  seekr.it("render children as components then add middle", () => {
+    const letters = [
+      { id: 0, letter: "s" },
+      { id: 1, letter: "o" },
+      { id: 3, letter: "d" },
+      { id: 4, letter: "a" }
+    ]
+
+    function App(component) {
+      const addLetter = () => {
+        letters.splice(2, 0, { id: 2, letter: "-" });
+        component.update();
+      }
+
+      return (
+        <div>
+          <button onclick={addLetter}>Add!</button>
+          <div>
+            {letters.map((letter) => <Letter key={letter.id} letter={letter.letter} />)}
+          </div>
+        </div>
+      )
+    }
+
+    function Letter(component) {
+      const letter = component.attrs.letter;
+      return <div>{letter}</div>
+    }
+
+    soda.render(<App />, document.body)
+
+    // Should add a letter
+    document.body.firstChild.firstChild.click();
+
+    return document.body.innerHTML === "<div><button>Add!</button><div><div>s</div><div>o</div><div>-</div><div>d</div><div>a</div></div></div>"
+  })
+
+
+
+  seekr.it("render children then remove middle", () => {
+    const letters = [
+      { id: 0, letter: "s" },
+      { id: 1, letter: "o" },
       { id: 2, letter: "-" },
       { id: 3, letter: "d" },
       { id: 4, letter: "a" }

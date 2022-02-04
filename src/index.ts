@@ -9,14 +9,26 @@ interface SodaComponent {
   update: () => void,
   __dom: HTMLElement,
   __element: SodaElement,
-  __children: number[]
+  __children: number[],
+  __hooks: any[],
+  __hookId: number
 }
 
 type SodaAttributes = { [key: string]: any };
 
 class Soda {
   private components: { [key: number]: SodaComponent } = {};
+  private currentComponent!: SodaComponent;
   private id: number = 0;
+
+  state(value: any) {
+    const component = this.currentComponent;
+
+    component.__hooks[component.__hookId] = component.__hooks[component.__hookId] || value;
+    const id = component.__hookId;
+    const setState = (state: any) => (component.__hooks[id] = state);
+    return [component.__hooks[component.__hookId++], setState];
+  }
 
   private createElement(
     tag: string | ((component: any) => SodaElement),
@@ -43,7 +55,9 @@ class Soda {
         },
         __dom: undefined as unknown as HTMLElement,
         __element: undefined as unknown as SodaElement,
-        __children: []
+        __children: [],
+        __hooks: [],
+        __hookId: 0
       };
 
       const id = this.id++;

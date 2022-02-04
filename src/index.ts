@@ -134,7 +134,10 @@ class Soda {
 
     for (let i = 0; i < element.children.length || i < dom.childNodes.length; ++i) {
       // Remove the excess amount of children
-      if (element.children[i] === undefined) { dom.removeChild(dom.childNodes[i--]); continue; }
+      if (element.children[i] === undefined) {
+        dom.removeChild(dom.childNodes[i--]);
+        continue;
+      }
 
       if (typeof element.children[i].tag === "function") {
         const container = document.createElement("div");
@@ -217,6 +220,14 @@ class Soda {
         else if (dom.childNodes[i].nodeValue !== element.children[i]) {
           dom.childNodes[i].nodeValue = element.children[i];
         }
+      }
+    }
+
+    for (let i = 0; i < component.__children.length; ++i) {
+      // If DOM of the component doesn't have a parent, it's removed
+      if (!this.components[component.__children[i]].__dom.parentNode) {
+        delete this.components[component.__children[i]];
+        component.__children.splice(i--, 1);
       }
     }
   }

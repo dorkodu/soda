@@ -34,6 +34,24 @@ class Soda {
     return [component.__hooks[component.__hookId++], setState];
   }
 
+  effect(cb: () => (() => void) | void, deps: any[]) {
+    const component = this.currentComponent;
+
+    const hookDeps = component.__hooks[component.__hookId];
+    const changed = hookDeps ? !deps.every((dep, i) => dep === hookDeps[i]) : true;
+
+    if (!deps || changed) {
+      cb();
+      component.__hooks[component.__hookId] = deps;
+    }
+
+    ++component.__hookId;
+  }
+
+  ref() {
+    return this.state({ current: undefined })[0];
+  }
+
   private createElement(
     tag: string | ((component: any) => SodaElement),
     attrs: { [key: string]: any },
@@ -109,8 +127,7 @@ class Soda {
         elem.addEventListener(key.substring(2).toLowerCase(), element.attrs[key], { capture: true })
       }
       else {
-        if ((key = this.translate(key)) !== "")
-          elem.setAttribute(key, element.attrs[key]);
+        this.setDomAttribute(elem, key, element.attrs[key]);
       }
     }
 
@@ -145,8 +162,7 @@ class Soda {
         }
       }
       else {
-        if ((key = this.translate(key)) !== "")
-          dom.removeAttribute(key);
+        this.removeDomAttribute(dom, key);
       }
     }
 
@@ -157,8 +173,7 @@ class Soda {
         }
       }
       else {
-        if ((key = this.translate(key)) !== "")
-          dom.setAttribute(key, element.attrs[key]);
+        this.setDomAttribute(dom, key, element.attrs[key]);
       }
     }
 
@@ -256,15 +271,39 @@ class Soda {
     for (let i = 0; i < component.__children.length; ++i) {
       // If DOM of the component doesn't have a parent, it's removed
       if (!this.components[component.__children[i]].__dom.parentNode) {
-        delete this.components[component.__children[i]];
         component.__children.splice(i--, 1);
+        delete this.components[component.__children[i]];
       }
     }
   }
 
-  private translate(key: string) {
-    if (key === "key") return "";
-    return key;
+  private setDomAttribute(dom: HTMLElement, key: string, value: any) {
+    switch (key) {
+      case "key":
+        break;
+      case "ref":
+        value.current = dom;
+        break;
+      case "":
+        break;
+      default:
+        dom.setAttribute(key, value);
+        break;
+    }
+  }
+
+  private removeDomAttribute(dom: HTMLElement, key: string) {
+    switch (key) {
+      case "key":
+        break;
+      case "ref":
+        break;
+      case "":
+        break;
+      default:
+        dom.removeAttribute(key);
+        break;
+    }
   }
 }
 

@@ -49,7 +49,7 @@ class Soda {
   }
 
   ref() {
-    return this.state({ current: undefined })[0];
+    return this.state({ dom: undefined })[0];
   }
 
   private createElement(
@@ -130,7 +130,6 @@ class Soda {
         this.setDomAttribute(elem, key, element.attrs[key]);
       }
     }
-
 
     for (let i = 0; i < element.children.length; ++i) {
       if (typeof element.children[i].tag === "function") {
@@ -282,7 +281,7 @@ class Soda {
       case "key":
         break;
       case "ref":
-        value.current = dom;
+        value.dom = dom;
         break;
       case "":
         break;

@@ -62,7 +62,10 @@ class Soda {
     const changed = hookDeps?.deps ? !deps.every((dep, i) => dep === hookDeps.deps[i]) : true;
 
     if (!deps || changed) {
-      component.__hooks[component.__hookId]?.cleanup();
+      // If a cleanup function exists, call it
+      if (typeof component.__hooks[component.__hookId]?.cleanup === "string")
+        component.__hooks[component.__hookId].cleanup();
+
       component.__hooks[component.__hookId] = { deps: deps, cleanup: cb() };
     }
 

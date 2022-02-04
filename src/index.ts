@@ -1,10 +1,23 @@
 interface SodaElement {
   tag: string | ((component: any) => SodaElement),
-  attrs: { [key: string]: any };
+  attrs: SodaAttributes;
   children: string | any[];
 }
 
+interface SodaComponent {
+  attrs: SodaAttributes,
+  update: () => void,
+  __dom: HTMLElement,
+  __element: SodaElement,
+  __children: number[]
+}
+
+type SodaAttributes = { [key: string]: any };
+
 class Soda {
+  private components: { [key: number]: SodaComponent } = {};
+  private id: number = 0;
+
   private createElement(
     tag: string | ((component: any) => SodaElement),
     attrs: { [key: string]: any },
@@ -15,32 +28,33 @@ class Soda {
 
   render(element: SodaElement, dom: HTMLElement) {
     if (typeof element.tag === "function") {
-      const component = {
+      const component: SodaComponent = {
         attrs: element.attrs,
         update: () => {
           if (typeof element.tag === "function") {
             //console.time("a")
 
             const newElement = element.tag(component);
-            this._update(component.__dom, newElement, component.__element)
+            this._update(component.__dom, newElement, component.__element, component)
             component.__element = newElement;
 
             //console.timeEnd("a")
           }
         },
         __dom: undefined as unknown as HTMLElement,
-        __element: undefined as unknown as SodaElement
+        __element: undefined as unknown as SodaElement,
+        __children: []
       };
 
-      this._render(dom, (component.__element = element.tag(component)), component, { svg: false });
+      this._render(dom, (component.__element = element.tag(component)), component, { svg: false, parent: true });
     }
   }
 
-  private _render(dom: HTMLElement, element: SodaElement, component: any, options: { svg: boolean }) {
+  private _render(dom: HTMLElement, element: SodaElement, component: SodaComponent, options: { svg: boolean, parent: boolean }) {
     if (Array.isArray(element)) {
       for (let i = 0; i < element.length; ++i) {
         if (typeof element[i].tag === "function") { this.render(element[i], dom); }
-        else { this._render(dom, element[i], undefined, options); }
+        else { this._render(dom, element[i], component, options); }
       }
 
       return;
@@ -55,7 +69,7 @@ class Soda {
       elem = document.createElement(element.tag as string);
     }
 
-    if (component) component.__dom = elem;
+    if (options.parent) { component.__dom = elem; options.parent = false; }
 
     for (let key in element.attrs) {
       if (key.startsWith("on")) {
@@ -73,7 +87,7 @@ class Soda {
         this.render(element.children[i], elem);
       }
       else if (typeof element.children[i] === "object") {
-        this._render(elem, element.children[i], undefined, options);
+        this._render(elem, element.children[i], component, options);
       }
       else {
         elem.appendChild(document.createTextNode(element.children[i]));
@@ -83,7 +97,7 @@ class Soda {
     dom.appendChild(elem);
   }
 
-  private _update(dom: HTMLElement, element: SodaElement, oldElement: SodaElement) {
+  private _update(dom: HTMLElement, element: SodaElement, oldElement: SodaElement, component: SodaComponent) {
     if (dom.tagName.toLowerCase() !== element.tag) {
       const parent = dom.parentNode;
       parent?.removeChild(dom);
@@ -150,7 +164,7 @@ class Soda {
             if (typeof newarr[newCursor].tag === "function")
               this.render(newarr[newCursor], container);
             else
-              this._render(container, newarr[newCursor], undefined, { svg: false });
+              this._render(container, newarr[newCursor], component, { svg: false, parent: false });
 
             dom.insertBefore(container.firstChild as HTMLElement, target);
 
@@ -161,7 +175,7 @@ class Soda {
             if (typeof newarr[newCursor].tag === "function")
               this.render(newarr[newCursor], container);
             else
-              this._render(container, newarr[newCursor], undefined, { svg: false });
+              this._render(container, newarr[newCursor], component, { svg: false, parent: false });
             dom.appendChild(container.firstChild as HTMLElement);
 
             ++newCursor;
@@ -188,7 +202,7 @@ class Soda {
           dom.insertBefore(document.createElement(element.children[i].tag), dom.childNodes[i]);
         }
 
-        this._update(dom.childNodes[i] as HTMLElement, element.children[i], oldElement.children[i]);
+        this._update(dom.childNodes[i] as HTMLElement, element.children[i], oldElement.children[i], component);
       }
       else {
         if (dom.childNodes[i] === undefined) {

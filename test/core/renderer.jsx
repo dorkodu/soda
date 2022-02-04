@@ -73,27 +73,6 @@ seekr.describe("Renderer", () => {
 
 
 
-  seekr.it("store state and update", () => {
-    function App(component) {
-      component.state = component.state || { count: 0 }
-      const increase = () => { component.state.count++; component.update(); }
-      return (
-        <div onclick={increase}>
-          <div>Count:</div>
-          <div>{component.state.count}</div>
-        </div>)
-    }
-
-    soda.render(<App />, document.body)
-
-    // Should increase count by 1
-    document.body.firstChild.click();
-
-    return document.body.innerHTML === "<div><div>Count:</div><div>1</div></div>"
-  })
-
-
-
   seekr.it("render children", () => {
     function App(component) {
       return (

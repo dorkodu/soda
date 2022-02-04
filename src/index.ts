@@ -23,14 +23,24 @@ class Soda {
 
   private work: { cb: () => void, hookId: number }[] = [];
 
-  state(value: any) {
+  state(value: any, cb?: (prev: any, next: any) => boolean) {
     const component = this.currentComponent;
 
     component.__hooks[component.__hookId] = component.__hooks[component.__hookId] || value;
     const id = component.__hookId;
     const setState = (state: any, dontUpdate?: boolean) => {
+      const oldState = component.__hooks[id];
       component.__hooks[id] = state;
-      if (!dontUpdate) component.update();
+
+      if (!dontUpdate) {
+        if (cb) {
+          if (!cb(oldState, state)) component.update();
+        }
+        else {
+          component.update();
+        }
+      }
+
       return state;
     };
     return [component.__hooks[component.__hookId++], setState];

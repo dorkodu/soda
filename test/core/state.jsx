@@ -150,4 +150,42 @@ seekr.describe("State", () => {
 
     return document.body.innerHTML === "<div>ABC</div>"
   })
+
+
+
+  seekr.it("set state 1 out of 3", () => {
+    function App(component) {
+      const [a, setA] = soda.state("a");
+      const [b, setB] = soda.state("b");
+      const [c, setC] = soda.state("c");
+      return <div onClick={() => { setB("B"); }}>{a}{b}{c}</div>
+    }
+
+    soda.render(<App />, document.body)
+
+    // Should increase count by 1
+    document.body.firstChild.click();
+
+    return document.body.innerHTML === "<div>aBc</div>"
+  })
+
+
+
+  seekr.it("set state 1 out of 3 multiple times", () => {
+    function App(component) {
+      const [a, setA] = soda.state("a");
+      const [b, setB] = soda.state(1);
+      const [c, setC] = soda.state("c");
+      return <div onClick={() => { setB(b + 1); }}>{a}{b}{c}</div>
+    }
+
+    soda.render(<App />, document.body)
+
+    // Should increase count by 3
+    document.body.firstChild.click();
+    document.body.firstChild.click();
+    document.body.firstChild.click();
+
+    return document.body.innerHTML === "<div>a4c</div>"
+  })
 })

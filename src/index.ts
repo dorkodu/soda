@@ -26,9 +26,9 @@ class Soda {
 
     component.__hooks[component.__hookId] = component.__hooks[component.__hookId] || value;
     const id = component.__hookId;
-    const setState = (state: any) => {
+    const setState = (state: any, dontUpdate?: boolean) => {
       component.__hooks[id] = state;
-      component.update();
+      if (!dontUpdate) component.update();
       return state;
     };
     return [component.__hooks[component.__hookId++], setState];

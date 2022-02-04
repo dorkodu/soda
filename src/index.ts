@@ -21,6 +21,8 @@ class Soda {
   private currentComponent!: SodaComponent;
   private id: number = 0;
 
+  private work: { cb: () => void, hookId: number }[] = [];
+
   state(value: any) {
     const component = this.currentComponent;
 
@@ -37,12 +39,21 @@ class Soda {
   effect(cb: () => (() => void) | void, deps: any[]) {
     const component = this.currentComponent;
 
+    if (!component.__dom) {
+      this.work.push({
+        cb: () => { this.effect(cb, deps); },
+        hookId: component.__hookId++
+      });
+
+      return;
+    }
+
     const hookDeps = component.__hooks[component.__hookId];
-    const changed = hookDeps ? !deps.every((dep, i) => dep === hookDeps[i]) : true;
+    const changed = hookDeps?.deps ? !deps.every((dep, i) => dep === hookDeps.deps[i]) : true;
 
     if (!deps || changed) {
-      cb();
-      component.__hooks[component.__hookId] = deps;
+      component.__hooks[component.__hookId]?.cleanup();
+      component.__hooks[component.__hookId] = { deps: deps, cleanup: cb() };
     }
 
     ++component.__hookId;
@@ -95,7 +106,11 @@ class Soda {
       this.components[id] = component;
       this._render(dom, (component.__element = element.tag(component)), component, { svg: false, parent: true });
 
+      // Work should be processed before current component is set back to previous component
+      this.processWork();
+
       this.currentComponent = previousComponent;
+
 
       return id;
     }
@@ -303,6 +318,15 @@ class Soda {
         dom.removeAttribute(key);
         break;
     }
+  }
+
+  private processWork() {
+    for (let i = 0; i < this.work.length; ++i) {
+      this.currentComponent.__hookId = this.work[i].hookId;
+      this.work[i].cb();
+    }
+
+    this.work = [];
   }
 }
 

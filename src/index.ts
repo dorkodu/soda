@@ -1,291 +1,346 @@
-import { translate } from "./translation";
-
-interface Component extends ComponentProperties {
-  id: number;
-}
-
-interface InternalComponent {
-  id: number;
-  key: number | string;
-
-  state?: () => any;
-  attributes?: () => any;
-
-  methods?: { [key: string]: (...args: any[]) => any };
-  hooks?: Hooks;
-  watch?: { [key: string]: (oldValue: any, newValue: any) => void };
-
-  refs: { [key: string]: HTMLElement };
-  children: { id: number; key: number | string }[];
-  dom: HTMLElement;
-  
-  setState: (value: any | ((state: any) => any)) => void;
-}
-
-interface ComponentProperties {
-  state?: () => any;
-  attributes?: () => any;
-  methods?: { [key: string]: (...args: any[]) => any };
-  render: () => LucidElement;
-  hooks?: Hooks;
-  watch?: { [key: string]: (oldValue: any, newValue: any) => void };
-}
-
-interface LucidElement {
-  tag: keyof HTMLElementTagNameMap;
-  attrs: { [key: string]: any };
+interface SodaElement {
+  tag: string | ((component: any) => SodaElement),
+  attrs: SodaAttributes;
   children: string | any[];
 }
 
-interface Hooks {
-  created?: () => void;
-  connected?: () => void;
-  disconnected?: () => void;
-  updated?: () => void;
+interface SodaComponent {
+  attrs: SodaAttributes,
+  update: () => void,
+  __dom: HTMLElement,
+  __element: SodaElement,
+  __children: number[],
+  __hooks: any[],
+  __hookId: number
 }
 
-class Lucid {
-  private components: Component[] = [];
-  private instances: {[key: number | string]: InternalComponent}[] = [];
+type SodaAttributes = { [key: string]: any };
+
+class Soda {
+  private components: { [key: number]: SodaComponent } = {};
+  private currentComponent!: SodaComponent;
   private id: number = 0;
 
-  createElement(
-    tag: keyof HTMLElementTagNameMap,
-    attrs: { [key: string]: any }, 
-    ...children: any
-  ): LucidElement {
-    return { tag, attrs, children };
-  } 
+  private work: { cb: () => void, hookId: number }[] = [];
 
-  component(props: ComponentProperties) {
-    this.components[this.id] = { id: this.id, ...props }
-    this.instances[this.id] = {};
-    
-    return this.components[this.id++];
-  }
+  state(value: any, cb?: (prev: any, next: any) => boolean) {
+    const component = this.currentComponent;
 
-  render(
-    dom: HTMLElement, 
-    component: Component, 
-    key: number | string, 
-    attributes?: any, 
-    options?: {first: boolean, last: boolean, index: number}
-  ) {
-    const self = this;
-    
-    this.instances[component.id][key] = {
-      id: component.id,
-      key: key,
-      attributes: attributes || component.attributes && component.attributes(),
-      state: component.state && component.state(),
-      methods: {},
-      watch: {},
-      hooks: {},
-      refs: {},
-      children: [],
-      dom: undefined as unknown as HTMLElement,
-      setState: function (value) {
-        if (typeof value === "function") 
-          self.instances[component.id][key].state = value(self.instances[component.id][key]);
-        else if (typeof value === "object")
-          self.instances[component.id][key].state = value;
-          
-        self.updateComponent(this.dom, self.components[component.id].render.apply(self.instances[component.id][key]), component.id, key, {parent:true});
+    component.__hooks[component.__hookId] = component.__hooks[component.__hookId] || value;
+    const id = component.__hookId;
+    const setState = (state: any, dontUpdate?: boolean) => {
+      const oldState = component.__hooks[id];
+      component.__hooks[id] = state;
 
-        // Call "updated" hook if exists
-        const instance = self.instances[component.id][key] as any;
-        instance.h_updated && instance.h_updated()
+      if (!dontUpdate) {
+        if (cb) {
+          if (!cb(oldState, state)) component.update();
+        }
+        else {
+          component.update();
+        }
       }
+
+      return state;
     };
-
-    const instance = this.instances[component.id][key] as any;
-    const methods = this.components[component.id].methods as any;
-    const watch = this.components[component.id].watch as any;
-    const hooks = this.components[component.id].hooks as any;
-
-    for (const methodKey in methods) {
-      instance["m_" + methodKey] = methods[methodKey];
-      instance.methods[methodKey] = (...args: any[]) => instance["m_" + methodKey](...args);
-    }
-    for (const watchKey in watch) {
-      instance["w_" + watchKey] = watch[watchKey];
-      instance.watch[watchKey] = (...args: any[]) => instance["w_" + watchKey](...args);
-    }
-    for (const hooksKey in hooks) {
-      instance["h_" + hooksKey] = hooks[hooksKey];
-      instance.hooks[hooksKey] = (...args: any[]) => instance["h_" + hooksKey](...args);
-    }
-
-     // Find the parent of the current component that's being rendered
-    let parentNode: HTMLElement | null = dom;
-    while (parentNode) {
-      const parentId = dom.getAttribute("lucid-id") as number | null;
-      const parentKey = dom.getAttribute("lucid-key");
-      if (parentId && parentKey) {
-        this.instances[parentId][parentKey].children.push({ id: component.id, key: key });
-        break;
-      }
-      parentNode = parentNode.parentElement;
-    }
-
-     // Call "created" hook if exists
-    instance.h_created && instance.h_created();
-
-    let elem = document.createElement("div") as HTMLElement;
-    this.connectComponent(elem, this.components[component.id].render.apply(this.instances[component.id][key]), component.id, key, {svg: false});
-    elem = elem.firstChild as HTMLElement;
-
-    // Render the component to the appropriate position
-    if (!options) {
-      dom.appendChild(elem);
-    } else {
-      if (options.first) {
-        if (dom.firstChild) dom.insertBefore(elem, dom.firstChild);
-        else dom.appendChild(elem);
-      } else if (options.index) {
-        dom.insertBefore(elem, dom.children[options.index])
-      }
-      else {
-        dom.appendChild(elem)
-      }
-    }
-
-    // Set 2 lucid attributes, "lucid-id" and "lucid-key"
-    elem.setAttribute("lucid-id", component.id as unknown as string);
-    elem.setAttribute("lucid-key", key as string);
-
-    // Set the dom of the element, since it has been connected
-    instance.dom = elem;
-
-    // Call "connected" hook if exists
-    instance.h_connected && instance.h_connected();
+    return [component.__hooks[component.__hookId++], setState];
   }
 
-  remove(identifier: Component | number, key: number | string) {
-    const id = typeof identifier === "number" ? identifier : identifier.id;
-    const dom = this.instances[id][key].dom;
+  effect(cb: () => (() => void) | void, deps: any[]) {
+    const component = this.currentComponent;
 
-    // Remove the component from the DOM
-    dom.parentNode!.removeChild(dom);
+    if (!component.__dom) {
+      this.work.push({
+        cb: () => { this.effect(cb, deps); },
+        hookId: component.__hookId++
+      });
 
-    // Remove all children components
-    const childrenCount = this.instances[id][key].children.length;
-    for (let i = 0; i < childrenCount; ++i) {
-      const child = this.instances[id][key].children[i];
-      this.remove(child.id, child.key);
+      return;
     }
 
-    // Call "disconnected" hook if exists
-    const instance = this.instances[id][key] as any;
-    instance.h_disconnected && instance.h_disconnected();
+    const hookDeps = component.__hooks[component.__hookId];
+    const changed = hookDeps?.deps ? !deps.every((dep, i) => dep === hookDeps.deps[i]) : true;
 
-    // Delete it from the elements
-    delete this.instances[id][key];
+    if (!deps || changed) {
+      // If a cleanup function exists, call it
+      if (typeof component.__hooks[component.__hookId]?.cleanup === "string")
+        component.__hooks[component.__hookId].cleanup();
+
+      component.__hooks[component.__hookId] = { deps: deps, cleanup: cb() };
+    }
+
+    ++component.__hookId;
   }
 
-  connectComponent(
-    dom: HTMLElement, 
-    element: LucidElement, 
-    id: number, 
-    key: number | string, 
-    settigs: {svg: boolean}
-  ) {
-    // Get 2 lucid attributes, "lucid-id" and "lucid-key"
-    const lucidId = element.attrs && element.attrs["lucid-id"];
-    const lucidKey = element.attrs && element.attrs["lucid-key"];
+  ref() {
+    return this.state({ dom: undefined })[0];
+  }
 
-    // If component id and key are present in the node, it's a lucid component
-    if (lucidId && lucidKey) {
-      // Render the component into a container
-      const container = document.createElement("div") as HTMLElement;
-      this.render(container, this.components[lucidId], lucidKey);
+  private createElement(
+    tag: string | ((component: any) => SodaElement),
+    attrs: { [key: string]: any },
+    ...children: any
+  ): SodaElement {
+    return { tag, attrs, children };
+  }
 
-      // Key might be a variable(state, attributes or methods), so convert it's text to variable
-      container.firstElementChild?.setAttribute("lucid-key", lucidKey);
+  render(element: SodaElement, dom: HTMLElement) {
+    if (typeof element.tag === "function") {
+      const component: SodaComponent = {
+        attrs: element.attrs,
+        update: () => {
+          if (typeof element.tag === "function") {
+            //console.time("a")
 
-      // Append the component in the container to the DOM
-      dom.appendChild(container.firstElementChild as Node);
+            const previousComponent = this.currentComponent;
+            this.currentComponent = component;
+
+            component.__hookId = 0;
+            const newElement = element.tag(component);
+            this._update(component.__dom, newElement, component.__element, component)
+            component.__element = newElement;
+
+            this.currentComponent = previousComponent;
+
+            //console.timeEnd("a")
+          }
+        },
+        __dom: undefined as unknown as HTMLElement,
+        __element: undefined as unknown as SodaElement,
+        __children: [],
+        __hooks: [],
+        __hookId: 0
+      };
+
+      const previousComponent = this.currentComponent;
+      this.currentComponent = component;
+
+      const id = this.id++;
+      this.components[id] = component;
+      this._render(dom, (component.__element = element.tag(component)), component, { svg: false, parent: true });
+
+      // Work should be processed before current component is set back to previous component
+      this.processWork();
+
+      this.currentComponent = previousComponent;
+
+
+      return id;
+    }
+  }
+
+  private _render(dom: HTMLElement, element: SodaElement, component: SodaComponent, options: { svg: boolean, parent: boolean }) {
+    if (Array.isArray(element)) {
+      for (let i = 0; i < element.length; ++i) {
+        if (typeof element[i].tag === "function") { component.__children.push(this.render(element[i], dom) as number); }
+        else { this._render(dom, element[i], component, options); }
+      }
+
       return;
     }
 
     let elem: HTMLElement;
-
-    // Fix for svg's, they won't show up if not created with createElementNS
-    if (settigs.svg || element.tag as string === "svg") {
-      elem = document.createElementNS("http://www.w3.org/2000/svg", element.tag) as unknown as HTMLElement;
-      settigs.svg = true;
+    if (element.tag === "svg" || options.svg) {
+      elem = document.createElementNS("http://www.w3.org/2000/svg", element.tag as string) as unknown as HTMLElement;
+      options.svg = true;
     }
     else {
-      elem = document.createElement(element.tag);
+      elem = document.createElement(element.tag as string);
     }
 
-    for (const key in element.attrs) {
+    if (options.parent) { component.__dom = elem; options.parent = false; }
+
+    for (let key in element.attrs) {
       if (key.startsWith("on")) {
-        elem.addEventListener(key.substring(2).toLowerCase(), (ev) => { element.attrs[key](ev); });
+        elem.addEventListener(key.substring(2).toLowerCase(), element.attrs[key], { capture: true })
       }
       else {
-        elem.setAttribute(translate(key), element.attrs[key]);
+        this.setDomAttribute(elem, key, element.attrs[key]);
       }
     }
-    
+
     for (let i = 0; i < element.children.length; ++i) {
-      if (typeof element.children[i] === "object") {
-        this.connectComponent(elem, element.children[i], id, key, settigs);
-      } 
+      if (typeof element.children[i].tag === "function") {
+        component.__children.push(this.render(element.children[i], elem) as number);
+      }
+      else if (typeof element.children[i] === "object") {
+        this._render(elem, element.children[i], component, options);
+      }
       else {
         elem.appendChild(document.createTextNode(element.children[i]));
       }
     }
 
     dom.appendChild(elem);
-
-    // Get "lucid-ref" attribute, if exists, set the ref of the dom on the element
-    const ref = elem.getAttribute("lucid-ref");
-    if (ref) this.instances[id][key].refs[ref] = elem;
   }
 
-  updateComponent(
-    dom: HTMLElement, 
-    element: LucidElement, 
-    id: number, 
-    key: number | string, 
-    options: {parent: boolean}
-  ) {
-    if (typeof element !== "object") {
-      if (element !== dom.nodeValue) dom.nodeValue = element;
-      return;
+  private _update(dom: HTMLElement, element: SodaElement, oldElement: SodaElement, component: SodaComponent) {
+    if (dom.tagName.toLowerCase() !== element.tag) {
+      const parent = dom.parentNode;
+      parent?.removeChild(dom);
+      dom = document.createElement(element.tag as string);
+      parent?.appendChild(dom);
     }
 
-    for (const key in element.attrs) {
-      // Only change the attributes that are not functions,
-      // because only {{state.*}} attributes can change
-      if (!key.startsWith("on")) {
-        const result = translate(key);
-        if (dom.getAttribute(result) !== element.attrs[key] && element.attrs[key] !== "") 
-          dom.setAttribute(result, element.attrs[key]);
-      }
-    }
-
-    let childrenId = 0;
-    const childNodes = Array.from(dom.childNodes);
-    for (let i = 0, skeletonId = 0; i < childNodes.length; ++i, ++skeletonId) {
-      if (childNodes[i].nodeType === document.ELEMENT_NODE) {
-        if (!options.parent && dom.children.length > childrenId
-          && dom.children[childrenId].getAttribute("lucid-id")
-          && dom.children[childrenId].getAttribute("lucid-key")) {
-          skeletonId--;
-          childrenId++;
-          continue;
+    for (let key in oldElement?.attrs) {
+      if (key.startsWith("on")) {
+        if (oldElement.attrs && oldElement.attrs[key]) {
+          dom.removeEventListener(key.substring(2).toLowerCase(), oldElement.attrs[key], { capture: true });
         }
-        childrenId++;
       }
-
-      // Check also if there is a skeleton for the dom child
-      if (element.children[skeletonId]) {
-        this.updateComponent(childNodes[i] as HTMLElement, element.children[skeletonId], id, key, {parent: false});
+      else {
+        this.removeDomAttribute(dom, key);
       }
     }
+
+    for (let key in element?.attrs) {
+      if (key.startsWith("on")) {
+        if (element.attrs && element.attrs[key]) {
+          dom.addEventListener(key.substring(2).toLowerCase(), element.attrs[key], { capture: true })
+        }
+      }
+      else {
+        this.setDomAttribute(dom, key, element.attrs[key]);
+      }
+    }
+
+    for (let i = 0; i < element.children.length || i < dom.childNodes.length; ++i) {
+      // Remove the excess amount of children
+      if (element.children[i] === undefined) {
+        dom.removeChild(dom.childNodes[i--]);
+        continue;
+      }
+
+      if (typeof element.children[i].tag === "function") {
+        const container = document.createElement("div");
+        component.__children.push(this.render(element.children[i], container) as number);
+
+        if (dom.childNodes[i] === undefined) {
+          dom.appendChild(container.firstChild as HTMLElement);
+        }
+        else {
+          dom.insertBefore(container.firstChild as HTMLElement, dom.childNodes[i]);
+        }
+      }
+      else if (Array.isArray(element.children[i])) {
+        const oldarr = oldElement.children[i];
+        const newarr = element.children[i];
+
+        let current: any = {};
+
+        for (let index = 0; index < oldarr.length; ++index)
+          current[oldarr[index].attrs.key] = dom.childNodes[index];
+
+        for (let oldCursor = 0, newCursor = 0; oldCursor < oldarr.length || newCursor < newarr.length;) {
+          if (oldarr[oldCursor]?.attrs.key === newarr[newCursor]?.attrs.key) {
+            ++oldCursor;
+            ++newCursor;
+          }
+          else if (oldarr[oldCursor] && newarr[newCursor]) {
+            let target: HTMLElement = current[oldarr[oldCursor].attrs.key];
+            const container = document.createElement("div");
+            if (typeof newarr[newCursor].tag === "function")
+              component.__children.push(this.render(newarr[newCursor], container) as number);
+            else
+              this._render(container, newarr[newCursor], component, { svg: false, parent: false });
+
+            dom.insertBefore(container.firstChild as HTMLElement, target);
+
+            ++newCursor;
+          }
+          else if (!oldarr[oldCursor] && newarr[newCursor]) {
+            const container = document.createElement("div");
+            if (typeof newarr[newCursor].tag === "function")
+              component.__children.push(this.render(newarr[newCursor], container) as number);
+            else
+              this._render(container, newarr[newCursor], component, { svg: false, parent: false });
+            dom.appendChild(container.firstChild as HTMLElement);
+
+            ++newCursor;
+          }
+          else if (oldarr[oldCursor] && !newarr[newCursor]) {
+            dom.removeChild(current[oldarr[oldCursor].attrs.key]);
+
+            ++oldCursor;
+            ++newCursor;
+          }
+          else {
+            ++oldCursor;
+            ++newCursor;
+          }
+        }
+
+        break;
+      }
+      else if (typeof element.children[i] === "object") {
+        if (dom.childNodes[i] === undefined) {
+          dom.appendChild(document.createElement(element.children[i].tag));
+        }
+        else if (dom.childNodes[i].nodeType !== document.ELEMENT_NODE) {
+          dom.insertBefore(document.createElement(element.children[i].tag), dom.childNodes[i]);
+        }
+
+        this._update(dom.childNodes[i] as HTMLElement, element.children[i], oldElement.children[i], component);
+      }
+      else {
+        if (dom.childNodes[i] === undefined) {
+          dom.appendChild(document.createTextNode(element.children[i]));
+        }
+        else if (dom.childNodes[i].nodeType !== document.TEXT_NODE) {
+          dom.insertBefore(document.createTextNode(element.children[i]), dom.childNodes[i]);
+        }
+        else if (dom.childNodes[i].nodeValue !== element.children[i]) {
+          dom.childNodes[i].nodeValue = element.children[i];
+        }
+      }
+    }
+
+    for (let i = 0; i < component.__children.length; ++i) {
+      // If DOM of the component doesn't have a parent, it's removed
+      if (!this.components[component.__children[i]].__dom.parentNode) {
+        delete this.components[component.__children[i]];
+        component.__children.splice(i--, 1);
+      }
+    }
+  }
+
+  private setDomAttribute(dom: HTMLElement, key: string, value: any) {
+    switch (key) {
+      case "key":
+        break;
+      case "ref":
+        value.dom = dom;
+        break;
+      case "":
+        break;
+      default:
+        dom.setAttribute(key, value);
+        break;
+    }
+  }
+
+  private removeDomAttribute(dom: HTMLElement, key: string) {
+    switch (key) {
+      case "key":
+        break;
+      case "ref":
+        break;
+      case "":
+        break;
+      default:
+        dom.removeAttribute(key);
+        break;
+    }
+  }
+
+  private processWork() {
+    for (let i = 0; i < this.work.length; ++i) {
+      this.currentComponent.__hookId = this.work[i].hookId;
+      this.work[i].cb();
+    }
+
+    this.work = [];
   }
 }
 
-export const lucid = new Lucid();
+export const soda = new Soda();

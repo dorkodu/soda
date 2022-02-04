@@ -26,7 +26,11 @@ class Soda {
 
     component.__hooks[component.__hookId] = component.__hooks[component.__hookId] || value;
     const id = component.__hookId;
-    const setState = (state: any) => (component.__hooks[id] = state);
+    const setState = (state: any) => {
+      component.__hooks[id] = state;
+      component.update();
+      return state;
+    };
     return [component.__hooks[component.__hookId++], setState];
   }
 
@@ -46,9 +50,15 @@ class Soda {
           if (typeof element.tag === "function") {
             //console.time("a")
 
+            const previousComponent = this.currentComponent;
+            this.currentComponent = component;
+
+            component.__hookId = 0;
             const newElement = element.tag(component);
             this._update(component.__dom, newElement, component.__element, component)
             component.__element = newElement;
+
+            this.currentComponent = previousComponent;
 
             //console.timeEnd("a")
           }
@@ -60,9 +70,15 @@ class Soda {
         __hookId: 0
       };
 
+      const previousComponent = this.currentComponent;
+      this.currentComponent = component;
+
       const id = this.id++;
       this.components[id] = component;
       this._render(dom, (component.__element = element.tag(component)), component, { svg: false, parent: true });
+
+      this.currentComponent = previousComponent;
+
       return id;
     }
   }

@@ -213,7 +213,7 @@ class Soda {
 
       if (typeof element.children[i].tag === "function") {
         const container = document.createElement("div");
-        this.render(element.children[i], container);
+        component.__children.push(this.render(element.children[i], container) as number);
 
         if (dom.childNodes[i] === undefined) {
           dom.appendChild(container.firstChild as HTMLElement);
@@ -240,7 +240,7 @@ class Soda {
             let target: HTMLElement = current[oldarr[oldCursor].attrs.key];
             const container = document.createElement("div");
             if (typeof newarr[newCursor].tag === "function")
-              this.render(newarr[newCursor], container);
+              component.__children.push(this.render(newarr[newCursor], container) as number);
             else
               this._render(container, newarr[newCursor], component, { svg: false, parent: false });
 
@@ -251,7 +251,7 @@ class Soda {
           else if (!oldarr[oldCursor] && newarr[newCursor]) {
             const container = document.createElement("div");
             if (typeof newarr[newCursor].tag === "function")
-              this.render(newarr[newCursor], container);
+              component.__children.push(this.render(newarr[newCursor], container) as number);
             else
               this._render(container, newarr[newCursor], component, { svg: false, parent: false });
             dom.appendChild(container.firstChild as HTMLElement);

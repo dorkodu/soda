@@ -77,7 +77,11 @@ seekr.describe("Renderer", () => {
     function App(component) {
       component.state = component.state || { count: 0 }
       const increase = () => { component.state.count++; component.update(); }
-      return <div onclick={increase}>Count: {component.state.count}</div>
+      return (
+        <div onclick={increase}>
+          <div>Count:</div>
+          <div>{component.state.count}</div>
+        </div>)
     }
 
     soda.render(<App />, document.body)
@@ -85,7 +89,7 @@ seekr.describe("Renderer", () => {
     // Should increase count by 1
     document.body.firstChild.click();
 
-    return document.body.innerHTML === "<div>Count: 1</div>"
+    return document.body.innerHTML === "<div><div>Count:</div><div>1</div></div>"
   })
 
 

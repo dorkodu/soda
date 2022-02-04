@@ -188,4 +188,28 @@ seekr.describe("State", () => {
 
     return document.body.innerHTML === "<div>a4c</div>"
   })
+
+
+
+  seekr.it("set state then remove child", () => {
+    function App(component) {
+      const [count, setCount] = soda.state(1);
+
+      if (count === 1)
+        return (
+          <div>
+            <button onClick={() => { setCount(count + 1) }}></button>
+            <div>Hi!</div>
+          </div>
+        )
+      return <div>Hello!</div>
+    }
+
+    soda.render(<App />, document.body)
+
+    // Should increase count by 1
+    document.body.firstChild.firstChild.click();
+
+    return document.body.innerHTML === "<div>Hello!</div>"
+  })
 })

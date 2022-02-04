@@ -109,4 +109,28 @@ seekr.describe("Effect", () => {
 
     return output === "aBc";
   })
+
+
+
+  seekr.it("effect with one dependency but multiple states", () => {
+    let output;
+
+    function App(component) {
+      const [a, setA] = soda.state("a");
+      const [b, setB] = soda.state("b");
+      const [c, setC] = soda.state("c");
+
+      soda.effect(() => {
+        output = a + b + c;
+      }, [b])
+
+      return <div onClick={() => { setB("B") }}>Hello, world!</div>
+    }
+
+    soda.render(<App />, document.body)
+
+    document.body.firstChild.click();
+
+    return output === "aBc";
+  })
 })

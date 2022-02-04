@@ -46,14 +46,17 @@ class Soda {
         __children: []
       };
 
+      const id = this.id++;
+      this.components[id] = component;
       this._render(dom, (component.__element = element.tag(component)), component, { svg: false, parent: true });
+      return id;
     }
   }
 
   private _render(dom: HTMLElement, element: SodaElement, component: SodaComponent, options: { svg: boolean, parent: boolean }) {
     if (Array.isArray(element)) {
       for (let i = 0; i < element.length; ++i) {
-        if (typeof element[i].tag === "function") { this.render(element[i], dom); }
+        if (typeof element[i].tag === "function") { component.__children.push(this.render(element[i], dom) as number); }
         else { this._render(dom, element[i], component, options); }
       }
 
@@ -84,7 +87,7 @@ class Soda {
 
     for (let i = 0; i < element.children.length; ++i) {
       if (typeof element.children[i].tag === "function") {
-        this.render(element.children[i], elem);
+        component.__children.push(this.render(element.children[i], elem) as number);
       }
       else if (typeof element.children[i] === "object") {
         this._render(elem, element.children[i], component, options);

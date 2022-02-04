@@ -270,8 +270,8 @@ class Soda {
     for (let i = 0; i < component.__children.length; ++i) {
       // If DOM of the component doesn't have a parent, it's removed
       if (!this.components[component.__children[i]].__dom.parentNode) {
-        component.__children.splice(i--, 1);
         delete this.components[component.__children[i]];
+        component.__children.splice(i--, 1);
       }
     }
   }

@@ -1,3 +1,7 @@
+<!--
+Fix effect running an infinite loop when a setstate is called inside the effect with dependency as []. 
+-->
+
 ## 1.0.0 (February 5, 2022)
 
 - Add hooks:

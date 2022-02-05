@@ -1,10 +1,12 @@
-*package-log.json
+*package-lock.json
+
 *rollup.config.js
 *tsconfig.json
-*.jest.config.js
-*.babelrc.js
+
 *.gitignore
 *.gitattributes
-test/
+
 src/
+test/
+docs/
 node_modules/

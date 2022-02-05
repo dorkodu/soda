@@ -41,6 +41,8 @@ seekr.describe("Effect", () => {
     soda.render(<App />, document.body);
 
     document.body.firstChild.click();
+    document.body.firstChild.click();
+    document.body.firstChild.click();
 
     return count === 1;
   })

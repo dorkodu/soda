@@ -131,7 +131,7 @@ class Soda {
     }
   }
 
-  private _render(dom: HTMLElement, element: SodaElement, component: SodaComponent, options: { svg: boolean, parent: boolean }) {
+  private _render(dom: HTMLElement, element: SodaElement | SodaElement[], component: SodaComponent, options: { svg: boolean, parent: boolean }) {
     if (Array.isArray(element)) {
       for (let i = 0; i < element.length; ++i) {
         if (typeof element[i].tag === "function") { component.__children.push(this.render(element[i], dom) as number); }

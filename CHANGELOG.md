@@ -1,4 +1,4 @@
-## 1.0.0 (February 5, 2021)
+## 1.0.0 (February 5, 2022)
 
 - Add hooks:
   - `soda.state`
@@ -9,6 +9,6 @@
 
 
 
-## 0.1.0 (January 19, 2021)
+## 0.1.0 (January 19, 2022)
 
 - Initial public release

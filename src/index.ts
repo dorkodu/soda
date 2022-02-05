@@ -66,7 +66,10 @@ class Soda {
       if (typeof component.__hooks[component.__hookId]?.cleanup === "function")
         component.__hooks[component.__hookId].cleanup();
 
-      component.__hooks[component.__hookId] = { deps: deps, cleanup: cb() };
+      // Dependencies should be set before the callback is called
+      component.__hooks[component.__hookId] = {};
+      component.__hooks[component.__hookId].deps = deps;
+      component.__hooks[component.__hookId].cleanup = cb();
     }
 
     ++component.__hookId;
@@ -123,7 +126,6 @@ class Soda {
       this.processWork();
 
       this.currentComponent = previousComponent;
-
 
       return id;
     }

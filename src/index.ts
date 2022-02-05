@@ -63,7 +63,7 @@ class Soda {
 
     if (!deps || changed) {
       // If a cleanup function exists, call it
-      if (typeof component.__hooks[component.__hookId]?.cleanup === "string")
+      if (typeof component.__hooks[component.__hookId]?.cleanup === "function")
         component.__hooks[component.__hookId].cleanup();
 
       component.__hooks[component.__hookId] = { deps: deps, cleanup: cb() };

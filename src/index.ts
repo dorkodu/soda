@@ -339,7 +339,7 @@ class Soda {
         break;
       case "style":
         for (const styleKey in value) {
-          dom.style[styleKey as unknown as number] = value[styleKey];
+          dom.style.setProperty(styleKey, value[styleKey]);
         }
         break;
       default:

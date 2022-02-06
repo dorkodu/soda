@@ -235,6 +235,17 @@ class Soda {
 
         for (let oldCursor = 0, newCursor = 0; oldCursor < oldarr.length || newCursor < newarr.length;) {
           if (oldarr[oldCursor]?.attrs.key === newarr[newCursor]?.attrs.key) {
+            if (typeof newarr[newCursor].tag === "function") {
+              this.components[component.__children[oldCursor]].attrs = newarr[newCursor].attrs;
+              this.components[component.__children[oldCursor]].update();
+            }
+            else {
+              let target: HTMLElement = current[oldarr[oldCursor].attrs.key];
+              const container = document.createElement("div");
+              this._render(container, newarr[newCursor], component, { svg: false, parent: false });
+              dom.replaceChild(container.firstChild as HTMLElement, target);
+            }
+
             ++oldCursor;
             ++newCursor;
           }

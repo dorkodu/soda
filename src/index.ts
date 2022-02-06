@@ -157,7 +157,7 @@ class Soda {
         elem.addEventListener(key.substring(2).toLowerCase(), element.attrs[key], { capture: true })
       }
       else {
-        this.setDomAttribute(elem, key, element.attrs[key]);
+        this.setDomAttribute(elem, key, element.attrs[key], undefined);
       }
     }
 
@@ -184,25 +184,38 @@ class Soda {
       parent?.appendChild(dom);
     }
 
+    const processed: { [key: string]: boolean } = {};
+
     for (let key in oldElement?.attrs) {
       if (key.startsWith("on")) {
         if (oldElement.attrs && oldElement.attrs[key]) {
           dom.removeEventListener(key.substring(2).toLowerCase(), oldElement.attrs[key], { capture: true });
         }
+        if (element.attrs && element.attrs[key]) {
+          processed[key] = true;
+          dom.addEventListener(key.substring(2).toLowerCase(), element.attrs[key], { capture: true })
+        }
       }
       else {
-        this.removeDomAttribute(dom, key);
+        if (element?.attrs[key]) {
+          processed[key] = true;
+          this.setDomAttribute(dom, key, element.attrs[key], oldElement.attrs[key]);
+        } else {
+          this.removeDomAttribute(dom, key);
+        }
       }
     }
 
     for (let key in element?.attrs) {
+      if (processed[key]) continue;
+
       if (key.startsWith("on")) {
         if (element.attrs && element.attrs[key]) {
           dom.addEventListener(key.substring(2).toLowerCase(), element.attrs[key], { capture: true })
         }
       }
       else {
-        this.setDomAttribute(dom, key, element.attrs[key]);
+        this.setDomAttribute(dom, key, element.attrs[key], undefined);
       }
     }
 
@@ -241,9 +254,7 @@ class Soda {
             }
             else {
               let target: HTMLElement = current[oldarr[oldCursor].attrs.key];
-              const container = document.createElement("div");
-              this._render(container, newarr[newCursor], component, { svg: false, parent: false });
-              dom.replaceChild(container.firstChild as HTMLElement, target);
+              this._update(target, newarr[newCursor], oldarr[oldCursor], component);
             }
 
             ++oldCursor;
@@ -317,7 +328,7 @@ class Soda {
     }
   }
 
-  private setDomAttribute(dom: HTMLElement, key: string, value: any) {
+  private setDomAttribute(dom: HTMLElement, key: string, value: any, oldValue: any) {
     switch (key) {
       case "key":
         break;
@@ -326,8 +337,14 @@ class Soda {
         break;
       case "":
         break;
+      case "style":
+        for (const styleKey in value) {
+          dom.style[styleKey as unknown as number] = value[styleKey];
+        }
+        break;
       default:
-        dom.setAttribute(key, value);
+        if (value !== oldValue)
+          dom.setAttribute(key, value);
         break;
     }
   }
@@ -339,6 +356,8 @@ class Soda {
       case "ref":
         break;
       case "":
+        break;
+      case "style":
         break;
       default:
         dom.removeAttribute(key);

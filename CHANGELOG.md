@@ -18,8 +18,6 @@ Fix effect running an infinite loop when a setstate is called inside the effect 
 - Add support for SVG
 - Add render support for arrays
 
-
-
 ## 0.1.0 (January 19, 2022)
 
 - Initial public release

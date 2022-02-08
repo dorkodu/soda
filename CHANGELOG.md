@@ -1,6 +1,8 @@
-<!--
-Fix effect running an infinite loop when a setstate is called inside the effect with dependency as []. 
--->
+## 1.0.2 (February 8, 2022)
+
+- Rename soda to Soda in the code
+- Fix memory leak
+- Fix re-render bug with arrays that has function component in them
 
 ## 1.0.1 (February 7, 2022)
 

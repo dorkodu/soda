@@ -501,7 +501,6 @@ Benchmark.Framework.Lucid = {
     }
 
     update();
-    //soda.render(<Test />, document.getElementById("grid"));
     lucid.render(document.getElementById("grid"), App, 0);
   },
   loop() {

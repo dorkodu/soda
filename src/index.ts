@@ -16,7 +16,7 @@ interface SodaComponent {
 
 type SodaAttributes = { [key: string]: any };
 
-class Soda {
+class SodaClass {
   private components: { [key: number]: SodaComponent } = {};
   private currentComponent!: SodaComponent;
   private id: number = 0;
@@ -381,4 +381,4 @@ class Soda {
   }
 }
 
-export const soda = new Soda();
+export const Soda = new SodaClass();

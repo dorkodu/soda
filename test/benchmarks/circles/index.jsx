@@ -1,4 +1,4 @@
-class Soda {
+class SodaClass {
   constructor() {
     this.components = {};
     this.id = 0;
@@ -316,7 +316,7 @@ class Soda {
     this.work = [];
   }
 }
-const soda = new Soda();
+const Soda = new SodaClass();
 
 let comp;
 let elements;
@@ -357,7 +357,7 @@ Benchmark.Framework.Soda = {
     }
 
     update();
-    soda.render(<Test />, document.getElementById("grid"));
+    Soda.render(<Test />, document.getElementById("grid"));
   },
   loop() {
     Promise.resolve().then(() => {

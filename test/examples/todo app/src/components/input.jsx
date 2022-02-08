@@ -1,9 +1,9 @@
-import { soda } from "@dorkodu/soda";
+import { Soda } from "@dorkodu/soda";
 
 import { addTodo } from "../core/core";
 
 export function Input(component) {
-  const input = soda.ref();
+  const input = Soda.ref();
 
   const add = () => {
     if (input.dom.value !== "") {

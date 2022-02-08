@@ -14,7 +14,7 @@ let pluginOptions = [
     presets: [
     ],
     plugins: [
-      ["@babel/plugin-transform-react-jsx", { pragma: "soda.createElement" }],
+      ["@babel/plugin-transform-react-jsx", { pragma: "Soda.createElement" }],
     ]
   }),
   //uglify(),

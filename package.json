@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "description": "🥤 Soda - the fresh UI library in javascript",
   "keywords": [
-    "soda"
+    "Soda"
   ],
   "main": "lib/index.js",
   "module": "lib/index.js",

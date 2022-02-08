@@ -25,7 +25,7 @@ module.exports = {
               [
                 '@babel/plugin-transform-react-jsx',
                 {
-                  pragma: 'soda.createElement',
+                  pragma: 'Soda.createElement',
                 }
               ]
             ]

@@ -1,5 +1,5 @@
 import { seekr } from "../seekr";
-import { soda } from "../../lib/index";
+import { Soda } from "../../lib/index";
 
 seekr.describe("Effect", () => {
   seekr.beforeEach(() => {
@@ -13,14 +13,14 @@ seekr.describe("Effect", () => {
     let output;
 
     function App(component) {
-      soda.effect(() => {
+      Soda.effect(() => {
         output = "Soda"
       }, [])
 
       return <div>Hello, world!</div>
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     return output === "Soda"
   })
@@ -31,14 +31,14 @@ seekr.describe("Effect", () => {
     let count = 0;
 
     function App(component) {
-      soda.effect(() => {
+      Soda.effect(() => {
         count++;
       }, [])
 
       return <div onclick={() => { component.update(); }}>Hello, world!</div>
     }
 
-    soda.render(<App />, document.body);
+    Soda.render(<App />, document.body);
 
     document.body.firstChild.click();
     document.body.firstChild.click();
@@ -53,14 +53,14 @@ seekr.describe("Effect", () => {
     let count = 0;
 
     function App(component) {
-      soda.effect(() => {
+      Soda.effect(() => {
         count++;
       })
 
       return <div onclick={() => { component.update(); }}>Hello, world!</div>
     }
 
-    soda.render(<App />, document.body);
+    Soda.render(<App />, document.body);
 
     document.body.firstChild.click();
 
@@ -73,15 +73,15 @@ seekr.describe("Effect", () => {
     let output;
 
     function App(component) {
-      const [count, setCount] = soda.state(1);
-      soda.effect(() => {
+      const [count, setCount] = Soda.state(1);
+      Soda.effect(() => {
         output = count;
       }, [count])
 
       return <div onClick={() => { setCount(count + 1) }}>Hello, world!</div>
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     document.body.firstChild.click();
 
@@ -94,18 +94,18 @@ seekr.describe("Effect", () => {
     let output;
 
     function App(component) {
-      const [a, setA] = soda.state("a");
-      const [b, setB] = soda.state("b");
-      const [c, setC] = soda.state("c");
+      const [a, setA] = Soda.state("a");
+      const [b, setB] = Soda.state("b");
+      const [c, setC] = Soda.state("c");
 
-      soda.effect(() => {
+      Soda.effect(() => {
         output = a + b + c;
       }, [a, b, c])
 
       return <div onClick={() => { setB("B") }}>Hello, world!</div>
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     document.body.firstChild.click();
 
@@ -118,18 +118,18 @@ seekr.describe("Effect", () => {
     let output;
 
     function App(component) {
-      const [a, setA] = soda.state("a");
-      const [b, setB] = soda.state("b");
-      const [c, setC] = soda.state("c");
+      const [a, setA] = Soda.state("a");
+      const [b, setB] = Soda.state("b");
+      const [c, setC] = Soda.state("c");
 
-      soda.effect(() => {
+      Soda.effect(() => {
         output = a + b + c;
       }, [b])
 
       return <div onClick={() => { setB("B") }}>Hello, world!</div>
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     document.body.firstChild.click();
 

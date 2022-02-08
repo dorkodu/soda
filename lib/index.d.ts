@@ -6,7 +6,7 @@ interface SodaElement {
 declare type SodaAttributes = {
     [key: string]: any;
 };
-declare class Soda {
+declare class SodaClass {
     private components;
     private currentComponent;
     private id;
@@ -23,5 +23,5 @@ declare class Soda {
     private removeDomAttribute;
     private processWork;
 }
-export declare const soda: Soda;
+export declare const Soda: SodaClass;
 export {};

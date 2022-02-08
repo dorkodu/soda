@@ -12,9 +12,9 @@ Fix effect running an infinite loop when a setstate is called inside the effect 
 ## 1.0.0 (February 5, 2022)
 
 - Add hooks:
-  - `soda.state`
-  - `soda.effect`
-  - `soda.ref`
+  - `Soda.state`
+  - `Soda.effect`
+  - `Soda.ref`
 - Add support for SVG
 - Add render support for arrays
 

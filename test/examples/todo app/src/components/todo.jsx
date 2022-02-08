@@ -1,5 +1,3 @@
-import { soda } from "@dorkodu/soda";
-
 import { doneTodo, removeTodo } from "../core/core";
 
 export function Todo(component) {

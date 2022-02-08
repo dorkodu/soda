@@ -1,5 +1,5 @@
 import { seekr } from "../seekr";
-import { soda } from "../../lib/index";
+import { Soda } from "../../lib/index";
 
 seekr.describe("Renderer", () => {
   seekr.beforeEach(() => {
@@ -14,7 +14,7 @@ seekr.describe("Renderer", () => {
       return <div>Hello, world!</div>
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     return document.body.innerHTML === "<div>Hello, world!</div>"
   })
@@ -27,7 +27,7 @@ seekr.describe("Renderer", () => {
       return <div>Count: {count}</div>
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     return document.body.innerHTML === "<div>Count: 0</div>"
   })
@@ -44,7 +44,7 @@ seekr.describe("Renderer", () => {
       return <div>{message}</div>
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     return document.body.innerHTML === "<div><div>Hi!</div></div>"
   })
@@ -63,7 +63,7 @@ seekr.describe("Renderer", () => {
       return <span>Hello, world!</span>
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     ++count;
     comp.update();
@@ -86,7 +86,7 @@ seekr.describe("Renderer", () => {
       )
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     return document.body.innerHTML === "<div>Hello, world!<div>Hello, world!<div>Hello, world!</div></div></div>"
   })
@@ -102,7 +102,7 @@ seekr.describe("Renderer", () => {
       return <div>Hello, world!</div>
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     return document.body.innerHTML === "<div><div>Hello, world!</div></div>"
   })
@@ -120,7 +120,7 @@ seekr.describe("Renderer", () => {
       )
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     return document.body.innerHTML === "<div><div>s</div><div>o</div><div>d</div><div>a</div></div>"
   })
@@ -143,7 +143,7 @@ seekr.describe("Renderer", () => {
       return <div>{letter}</div>
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     return document.body.innerHTML === "<div><div>s</div><div>o</div><div>d</div><div>a</div></div>"
   })
@@ -160,7 +160,7 @@ seekr.describe("Renderer", () => {
       return <div>Count is 2</div>
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     // Should increase count by 1
     document.body.firstChild.click();
@@ -189,7 +189,7 @@ seekr.describe("Renderer", () => {
       )
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     // Should add a letter
     document.body.firstChild.firstChild.click();
@@ -221,7 +221,7 @@ seekr.describe("Renderer", () => {
       return <div>{letter}</div>
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     // Should add a letter
     document.body.firstChild.firstChild.click();
@@ -250,7 +250,7 @@ seekr.describe("Renderer", () => {
       )
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     // Should remove a letter
     document.body.firstChild.firstChild.click();
@@ -284,7 +284,7 @@ seekr.describe("Renderer", () => {
       return <div>{letter}</div>
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     // Should remove a letter
     document.body.firstChild.firstChild.click();
@@ -317,7 +317,7 @@ seekr.describe("Renderer", () => {
       )
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     // Should add a letter
     document.body.firstChild.firstChild.click();
@@ -355,7 +355,7 @@ seekr.describe("Renderer", () => {
       return <div>{letter}</div>
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     // Should add a letter
     document.body.firstChild.firstChild.click();
@@ -390,7 +390,7 @@ seekr.describe("Renderer", () => {
       )
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     // Should remove a letter
     document.body.firstChild.firstChild.click();
@@ -430,7 +430,7 @@ seekr.describe("Renderer", () => {
       return <div>{letter}</div>
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     // Should remove a letter
     document.body.firstChild.firstChild.click();
@@ -464,7 +464,7 @@ seekr.describe("Renderer", () => {
       )
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     // Should add a letter
     document.body.firstChild.firstChild.click();
@@ -503,7 +503,7 @@ seekr.describe("Renderer", () => {
       return <div>{letter}</div>
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     // Should add a letter
     document.body.firstChild.firstChild.click();
@@ -538,7 +538,7 @@ seekr.describe("Renderer", () => {
       )
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     // Should remove a letter
     document.body.firstChild.firstChild.click();
@@ -578,7 +578,7 @@ seekr.describe("Renderer", () => {
       return <div>{letter}</div>
     }
 
-    soda.render(<App />, document.body)
+    Soda.render(<App />, document.body)
 
     // Should remove a letter
     document.body.firstChild.firstChild.click();

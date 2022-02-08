@@ -1,5 +1,3 @@
-import { soda } from "@dorkodu/soda";
-
 import { Todo } from "./todo.jsx";
 
 import { todos, setTodoContainer } from "../core/core";

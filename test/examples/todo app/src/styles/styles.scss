@@ -1,0 +1,89 @@
+$font: -apple-system, 
+  BlinkMacSystemFont, 
+  avenir next, 
+  avenir, 
+  segoe ui, 
+  helvetica neue, 
+  helvetica, 
+  Ubuntu, 
+  roboto, 
+  noto, 
+  arial, 
+  sans-serif;   
+
+@mixin default_input {
+  overflow-wrap: break-word;
+  font-size: 16px;
+  font-family: $font;
+
+  resize: none;
+  outline: 0;
+  border: 0;
+  padding: 0;
+
+  border-bottom: 1px solid #000000;
+  border-radius: 0;
+
+  padding-bottom: 1px;
+
+  // Remove input shadow on iOS
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+@mixin default_button {
+  padding: 5px 20px;
+
+  background-color: rgba(0, 0, 0, 1);
+  color: #ffffff;
+
+  font-family: $font;
+  font-size: 15px;
+
+  border-radius: 10px;
+  border: 0;
+  
+  cursor: pointer;
+}
+
+body {
+  margin: 25px;
+  padding: 0;
+  outline: 0;
+
+  display: flex;
+  justify-content: center;
+}
+
+#app {
+  max-width: 400px
+}
+
+.input {
+  @include default_input();
+  font-size: 18px;
+}
+
+.button {
+  @include default_button();
+}
+
+.todo {
+  display: flex;
+  align-items: center;
+
+  .text {
+    font-family: $font;
+    font-size: 18px;
+    margin-left: 5px;
+  }
+
+  .icon {
+    cursor: pointer;
+  }
+
+  .done {
+    text-decoration: line-through;
+  }
+}

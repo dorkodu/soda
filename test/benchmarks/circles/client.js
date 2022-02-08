@@ -10,7 +10,7 @@ FRAMEWORKS = [
   { name: "Svelte", version: "3.28.0", time: 0 },
   { name: "Surplus", version: "0.5.3", time: 0 },
   { name: "Lucid", version: "1.0.0", time: 0 },
-  { name: "Soda", version: "1.0.1", time: 0 },
+  { name: "Soda", version: "1.0.2", time: 0 },
   { name: "Vanilla", version: "", time: 0 }
 ];
 

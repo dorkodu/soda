@@ -28,6 +28,6 @@
     "webpack-dev-server": "^4.7.2"
   },
   "dependencies": {
-    "@dorkodu/soda": "^1.0.1"
+    "@dorkodu/soda": "^1.0.2"
   }
 }

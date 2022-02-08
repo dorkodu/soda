@@ -182,7 +182,9 @@ seekr.describe("Renderer", () => {
       return (
         <div>
           <button onclick={addLetter}>Add!</button>
-          {letters.map((letter, index) => <div key={index}>{letter}</div>)}
+          <div>
+            {letters.map((letter, index) => <div key={index}>{letter}</div>)}
+          </div>
         </div>
       )
     }
@@ -192,7 +194,7 @@ seekr.describe("Renderer", () => {
     // Should add a letter
     document.body.firstChild.firstChild.click();
 
-    return document.body.innerHTML === "<div><button>Add!</button><div>s</div><div>o</div><div>d</div><div>a</div><div>!</div></div>"
+    return document.body.innerHTML === "<div><button>Add!</button><div><div>s</div><div>o</div><div>d</div><div>a</div><div>!</div></div></div>"
   })
 
 

@@ -18,6 +18,7 @@ declare class Soda {
     render(element: SodaElement, dom: HTMLElement): number | undefined;
     private _render;
     private _update;
+    private removeChildren;
     private setDomAttribute;
     private removeDomAttribute;
     private processWork;

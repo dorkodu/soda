@@ -234,7 +234,8 @@ class Soda {
           dom.appendChild(container.firstChild as HTMLElement);
         }
         else {
-          dom.insertBefore(container.firstChild as HTMLElement, dom.childNodes[i]);
+          //dom.insertBefore(container.firstChild as HTMLElement, dom.childNodes[i])
+          dom.replaceChild(container.firstChild as HTMLElement, dom.childNodes[i]);
         }
       }
       else if (Array.isArray(element.children[i])) {
@@ -319,9 +320,14 @@ class Soda {
       }
     }
 
+    this.removeChildren(component, false);
+  }
+
+  private removeChildren(component: SodaComponent, removeWithoutCheck: boolean) {
     for (let i = 0; i < component.__children.length; ++i) {
       // If DOM of the component doesn't have a parent, it's removed
-      if (!this.components[component.__children[i]].__dom.parentNode) {
+      if (removeWithoutCheck || !this.components[component.__children[i]].__dom.parentNode) {
+        this.removeChildren(this.components[component.__children[i]], true);
         delete this.components[component.__children[i]];
         component.__children.splice(i--, 1);
       }

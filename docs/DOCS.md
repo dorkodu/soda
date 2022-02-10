@@ -230,4 +230,4 @@ function Todo(component) {
 Soda.render(<App />, document.getElementById("app"))
 ```
 
-Since form elements keep their own state themselves, we can receive input by using the `onInput` event. In the `jsx` expression, we pass `todo` as an attribute and also we have to pass an index to the `key` property since it's a dynamic array meaning we might add or remove elements to it.
+Since form elements keep their own state themselves, we can reference them using `ref` and access their property when necessary. In the `jsx` expression, we pass `todo` as an attribute and also we have to pass an index to the `key` property since it's a dynamic array meaning we might add or remove elements to it.

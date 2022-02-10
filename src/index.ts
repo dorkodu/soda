@@ -93,8 +93,6 @@ class SodaClass {
         attrs: element.attrs,
         update: () => {
           if (typeof element.tag === "function") {
-            //console.time("a")
-
             const previousComponent = this.currentComponent;
             this.currentComponent = component;
 
@@ -104,8 +102,6 @@ class SodaClass {
             component.__element = newElement;
 
             this.currentComponent = previousComponent;
-
-            //console.timeEnd("a")
           }
         },
         __dom: undefined as unknown as HTMLElement,
@@ -234,7 +230,6 @@ class SodaClass {
           dom.appendChild(container.firstChild as HTMLElement);
         }
         else {
-          //dom.insertBefore(container.firstChild as HTMLElement, dom.childNodes[i])
           dom.replaceChild(container.firstChild as HTMLElement, dom.childNodes[i]);
         }
       }

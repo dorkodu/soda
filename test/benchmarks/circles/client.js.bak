@@ -36,7 +36,7 @@ Benchmark = {
       timing.textContent = `Performed ${loopCount} iterations in ${totalTime.toFixed(
         2
       )} ms (average ${(totalTime / loopCount).toFixed(2)} ms per loop).`;
-    if (auto !== undefined && loopCount === 3000) {
+    if (auto !== undefined && loopCount === 1500) {
       FRAMEWORKS[auto].time = (totalTime / loopCount).toFixed(2) + "ms";
       if (++auto === FRAMEWORKS.length) {
         stop();

@@ -47,6 +47,44 @@ In order to add local state to a component, we use `Soda.state` and give it a in
 
 
 
+#### Life Cycle Hooks
+
+> Life cycle hooks are a must in any component-based UI library. In **Soda**, there is 1 function which can represent multiple hooks at once (ex. oncomponentmount, oncomponentupdate).
+
+```jsx
+function App(component) {
+  const [count, setCount] = Soda.state(0);
+    
+  Soda.effect(() => {
+    // Will be called each time the component updates.
+  });
+    
+  Soda.effect(() => {
+    // Will be called once the component renders for the first time.
+  }, []); 
+    
+  Soda.effect(() => {
+    // Will be called after the update each time the count changes.
+  }, [count]);
+        
+  Soda.effect(() => {
+    // This function will be called on each cleanup,
+    // which means the update after this line has been run.
+    return () => {};
+  });
+    
+  return <div></div>
+}
+
+function Greeting(component) {
+  return <div>Hi!</div>
+}
+
+Soda.render(<App />, document.getElementById("app"))
+```
+
+
+
 #### Components within Components
 
 ```jsx
@@ -159,24 +197,22 @@ Each post has a unique `key` attribute which will optimize re-renders adding or 
 
 ```jsx
 function App(component) {
-  // Initialize component's state.
-  component.state = component.state || { todos: [], todoText: "" };
+  // Initialize component's state
+  const [todos, setTodos] = Soda.state([]);
+  
+  // This variable will have a reference to the
+  // DOM specified after the first render.
+  const input = Soda.ref();
 
-  // Will be called on each input.
-  const handleInput = (ev) => {
-    // ev.target.value stores the text written inside input element,
-    // and also settings state does not cause a re-render unless update is called.
-    component.state.todoText = ev.target.value;
-  }
-
+  // Using input.dom add a todo to todos array.
   const addTodo = () => {
-    component.state.todos.push(component.state.todoText);
-    component.update();
+    todos.push(input.dom.value);
+    setTodos(todos);
   }
 
   return (
     <div>
-      <input type="text" onInput={handleInput} />
+      <input type="text" ref={input} />
       <button onClick={addTodo}>Add todo</button>
       <div>
         {component.state.todos.map((todo, index) => <Todo key={index} todo={todo} />)}

@@ -6,7 +6,8 @@
 *.gitignore
 *.gitattributes
 
-src/
-test/
 docs/
 node_modules/
+res/
+src/
+test/

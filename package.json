@@ -5,6 +5,8 @@
   "keywords": [
     "Soda"
   ],
+  "author": "Berk Cambaz",
+  "license": "MIT",
   "main": "lib/index.js",
   "module": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -23,8 +25,6 @@
     "url": "https://github.com/dorkodu/soda/issues"
   },
   "homepage": "https://github.com/dorkodu/soda#readme",
-  "author": "Berk Cambaz",
-  "license": "MIT",
   "devDependencies": {
     "@babel/plugin-transform-react-jsx": "^7.16.7",
     "@babel/preset-env": "^7.16.10",

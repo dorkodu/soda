@@ -36,7 +36,7 @@ Benchmark = {
       timing.textContent = `Performed ${loopCount} iterations in ${totalTime.toFixed(
         2
       )} ms (average ${(totalTime / loopCount).toFixed(2)} ms per loop).`;
-    if (auto !== undefined && loopCount === 3000) {
+    if (auto !== undefined && loopCount === 1500) {
       FRAMEWORKS[auto].time = (totalTime / loopCount).toFixed(2) + "ms";
       if (++auto === FRAMEWORKS.length) {
         stop();
@@ -51,7 +51,9 @@ Benchmark = {
 
         return;
       }
+	  const autoid = auto;
       buttons.children[auto].click();
+	  auto = autoid;
       return;
     }
     timer = setTimeout(benchLoop, 0);
@@ -78,6 +80,7 @@ Benchmark = {
     button.onclick = () => {
       stop();
       loopTime = loopCount = totalTime = 0;
+      auto = undefined;
       let impl;
       if ((impl = Benchmark.Framework[framework.name])) {
         currentImpl = impl;
@@ -98,6 +101,7 @@ Benchmark = {
   function benchmark() {
     auto = 0;
     buttons.children[auto].click();
+    auto = 0;
   }
 
   const buttonBenchmark = document.createElement("button");

@@ -1,3 +1,5 @@
+import { JSX } from "./jsx";
+
 export interface SodaElement {
   tag: string | ((attrs: SodaAttributes) => SodaElement),
   attrs: SodaAttributes;
@@ -87,7 +89,7 @@ class SodaClass {
     return { tag, attrs, children };
   }
 
-  render(element: SodaElement, dom: HTMLElement) {
+  render(element: JSX.Element, dom: HTMLElement) {
     if (typeof element.tag === "function") {
       const component: SodaComponent = {
         attrs: element.attrs,

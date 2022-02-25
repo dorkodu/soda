@@ -1,10 +1,10 @@
-interface SodaElement {
-  tag: string | ((component: any) => SodaElement),
+export interface SodaElement {
+  tag: string | ((attrs: SodaAttributes) => SodaElement),
   attrs: SodaAttributes;
   children: string | any[];
 }
 
-interface SodaComponent {
+export interface SodaComponent {
   attrs: SodaAttributes,
   update: () => void,
   __dom: HTMLElement,
@@ -14,7 +14,7 @@ interface SodaComponent {
   __hookId: number
 }
 
-type SodaAttributes = { [key: string]: any };
+export type SodaAttributes = { [key: string]: any };
 
 class SodaClass {
   private components: { [key: number]: SodaComponent } = {};
@@ -97,7 +97,7 @@ class SodaClass {
             this.currentComponent = component;
 
             component.__hookId = 0;
-            const newElement = element.tag(component);
+            const newElement = element.tag(component.attrs);
             this._update(component.__dom, newElement, component.__element, component)
             component.__element = newElement;
 
@@ -116,7 +116,7 @@ class SodaClass {
 
       const id = this.id++;
       this.components[id] = component;
-      this._render(dom, (component.__element = element.tag(component)), component, { svg: false, parent: true });
+      this._render(dom, (component.__element = element.tag(component.attrs)), component, { svg: false, parent: true });
 
       // Work should be processed before current component is set back to previous component
       this.processWork();

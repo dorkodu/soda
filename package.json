@@ -9,7 +9,7 @@
   "license": "MIT",
   "main": "lib/index.js",
   "module": "lib/index.js",
-  "typings": "lib/index.d.ts",
+  "typings": "src/types.d.ts",
   "scripts": {
     "clean": "npx rimraf ./lib/**/*",
     "compile": "npx rollup --c",

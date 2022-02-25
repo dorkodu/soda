@@ -4,10 +4,8 @@
     "target": "ES2015",
     "moduleResolution": "Node",
     "strict": true,
-    "declaration": true,
     "outDir": "lib",
-    "rootDir": "src",
-    "declarationDir": ""
+    "rootDir": "src"
   },
   "include": [
     "src/**/*"

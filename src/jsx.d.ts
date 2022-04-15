@@ -28,6 +28,7 @@ export namespace JSX {
 
   export interface SVGAttributes<Target extends EventTarget = SVGElement>
     extends HTMLAttributes<Target> {
+    [key: string]: any,
     accentHeight?: number | string;
     accumulate?: 'none' | 'sum';
     additive?: 'replace' | 'sum';
@@ -387,6 +388,7 @@ export namespace JSX {
   >;
 
   export interface DOMAttributes<Target extends EventTarget> {
+    [key: string]: any,
     // Image Events
     onLoad?: GenericEventHandler<Target>;
     onLoadCapture?: GenericEventHandler<Target>;
@@ -592,6 +594,7 @@ export namespace JSX {
   export interface HTMLAttributes<RefType extends EventTarget = EventTarget>
     extends DOMAttributes<RefType> {
     // Standard HTML Attributes
+    [key: string]: any,
     accept?: string;
     acceptCharset?: string;
     accessKey?: string;

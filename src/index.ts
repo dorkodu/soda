@@ -118,6 +118,10 @@ class SodaClass {
 
       const id = this.id++;
       this.components[id] = component;
+      if (element.children) {
+        if (!component.attrs) component.attrs = { children: element.children };
+        else component.attrs.children = element.children;
+      }
       this._render(dom, (component.__element = element.tag(component.attrs)), component, { svg: false, parent: true });
 
       // Work should be processed before current component is set back to previous component

@@ -137,7 +137,7 @@ class SodaClass {
     if (Array.isArray(element)) {
       for (let i = 0; i < element.length; ++i) {
         if (typeof element[i].tag === "function") { component.__children.push(this.render(element[i], dom) as number); }
-        else { this._render(dom, element[i], component, options); }
+        else { this._render(dom, element[i], component, Object.assign({}, options)); }
       }
 
       return;
@@ -168,7 +168,7 @@ class SodaClass {
         component.__children.push(this.render(element.children[i], elem) as number);
       }
       else if (typeof element.children[i] === "object") {
-        this._render(elem, element.children[i], component, options);
+        this._render(elem, element.children[i], component, Object.assign({}, options));
       }
       else {
         elem.appendChild(document.createTextNode(element.children[i]));
